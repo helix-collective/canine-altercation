@@ -13,6 +13,8 @@ function love.load()
     shipSpeed = 0
     shipSpeedX = 0
     shipSpeedY = 0
+    
+    maxSpeed = 500
 end
 
 function love.update(dt)
@@ -24,10 +26,25 @@ function love.update(dt)
     end
 
     -- update ship speed
+    shipSpeedFactor = math.sqrt(1-(math.abs(shipSpeed*shipSpeed)/(maxSpeed*maxSpeed)))
     if love.keyboard.isDown('up') then
-        shipSpeed = shipSpeed + (shipSpeedDt * dt)
+        if shipSpeed > 0 then -- apply limiting factor if speed is too high
+            shipSpeed = shipSpeed + (shipSpeedDt * dt * shipSpeedFactor)
+        else
+            shipSpeed = shipSpeed + (shipSpeedDt * dt)
+        end
     elseif love.keyboard.isDown('down') then
-        shipSpeed = shipSpeed - (shipSpeedDt * dt)
+        if shipSpeed > 0 then -- apply limiting factor if backwards speed is too high
+            shipSpeed = shipSpeed - (shipSpeedDt * dt)
+        else
+            shipSpeed = shipSpeed - (shipSpeedDt * dt * shipSpeedFactor)
+        end
+    end
+    if shipSpeed > maxSpeed then
+        shipSpeed = maxSpeed
+    end
+    if shipSpeed < -maxSpeed then
+        shipSpeed = -maxSpeed
     end
 
     local shipSpeedX = shipSpeedX + math.cos(shipAngle) * shipSpeed
@@ -59,6 +76,7 @@ function love.draw()
         'shipY: '..shipY,
         'shipSpeed: '..shipSpeed,
         'shipSpeedX: '..shipSpeedX,
-        'shipSpeedY: '..shipSpeedY
+        'shipSpeedY: '..shipSpeedY,
+        'shipSpeedFactor: '..shipSpeedFactor,
     }, '\n'))
 end
