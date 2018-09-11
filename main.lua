@@ -17,7 +17,13 @@ function love.load()
     shipSpeedY = 0
     
     maxSpeed = 500
-    
+
+    local img = love.graphics.newImage('t1.png')
+    psystem = love.graphics.newParticleSystem(img, 32)
+    psystem:setParticleLifetime(1, 3) -- Particles live at least 2s and at most 5s.
+    psystem:setEmissionRate(20)
+    psystem:setSizeVariation(1)
+    psystem:setSizes(0.1)
 end
 
 function love.update(dt)
@@ -54,6 +60,8 @@ function love.update(dt)
     local shipSpeedY = shipSpeedY + math.sin(shipAngle) * shipSpeed
     shipX = (shipX + shipSpeedX * dt) % arenaWidth
     shipY = (shipY + shipSpeedY * dt) % arenaHeight
+
+    psystem:update(dt)
 end 
 
 function love.draw()
@@ -82,4 +90,9 @@ function love.draw()
         'shipSpeedY: '..shipSpeedY,
         'shipSpeedFactor: '..shipSpeedFactor,
     }, '\n'))
+
+    psystem:setDirection(shipAngle)
+    psystem:setLinearAcceleration(0, 0, -100 * math.cos(shipAngle), -100 * math.sin(shipAngle))
+    psystem:setPosition(-30 * math.cos(shipAngle), -30 * math.sin(shipAngle))
+    love.graphics.draw(psystem, shipX, shipY)
 end
