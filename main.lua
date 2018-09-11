@@ -1,7 +1,7 @@
 function love.load()
     -- Game Constants
     anglePerDt = 10
-    shipSpeed = 100
+    shipSpeedDt = 100
     arenaWidth = 800
     arenaHeight = 600
 
@@ -10,6 +10,7 @@ function love.load()
     shipY = arenaHeight / 2
 
     shipAngle = 0
+    shipSpeed = 0
     shipSpeedX = 0
     shipSpeedY = 0
 end
@@ -24,14 +25,17 @@ function love.update(dt)
 
     -- update ship speed
     if love.keyboard.isDown('up') then
-        shipSpeedX = shipSpeedX + math.cos(shipAngle) * shipSpeed * dt
-        shipSpeedY = shipSpeedY + math.sin(shipAngle) * shipSpeed * dt
+        shipSpeed = shipSpeed + (shipSpeedDt * dt)
+    elseif love.keyboard.isDown('down') then
+        shipSpeed = shipSpeed - (shipSpeedDt * dt)
     end
 
-
+    local shipSpeedX = shipSpeedX + math.cos(shipAngle) * shipSpeed
+    local shipSpeedY = shipSpeedY + math.sin(shipAngle) * shipSpeed
     shipX = (shipX + shipSpeedX * dt) % arenaWidth
     shipY = (shipY + shipSpeedY * dt) % arenaHeight
 end 
+
 function love.draw()
     love.graphics.setColor(0, 0, 1)
     love.graphics.circle('fill', shipX, shipY, 30)
@@ -46,12 +50,15 @@ function love.draw()
     )
 
     -- Temporary
+    local shipSpeedX = shipSpeedX + math.cos(shipAngle) * shipSpeed
+    local shipSpeedY = shipSpeedY + math.sin(shipAngle) * shipSpeed
     love.graphics.setColor(1, 1, 1)
     love.graphics.print(table.concat({
         'shipAngle: '..shipAngle,
         'shipX: '..shipX,
         'shipY: '..shipY,
+        'shipSpeed: '..shipSpeed,
         'shipSpeedX: '..shipSpeedX,
-        'shipSpeedY: '..shipSpeedY,
+        'shipSpeedY: '..shipSpeedY
     }, '\n'))
 end
