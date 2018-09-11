@@ -27,9 +27,19 @@ function love.load()
     local img = love.graphics.newImage('t1.png')
     psystem = love.graphics.newParticleSystem(img, 32)
     psystem:setParticleLifetime(1, 3) -- Particles live at least 2s and at most 5s.
-    psystem:setEmissionRate(20)
+    psystem:setEmissionRate(5)
     psystem:setSizeVariation(1)
-    psystem:setSizes(0.1)
+    psystem:setSizes(0.03, 0.02)
+    
+    thrustAnim = {}
+    thrustAnim[0] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_002.png')
+    thrustAnim[1] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_003.png')
+    thrustAnim[2] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_004.png')
+    thrustAnim[3] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_005.png')
+    thrustCurrentTic = 0
+    thrustWidth = thrustAnim[0]:getWidth()
+    thrustHeight = thrustAnim[0]:getHeight()
+    
 end
 
 function love.update(dt)
@@ -120,8 +130,18 @@ function love.draw()
         'shipSpeedFactor: '..shipSpeedFactor,
     }, '\n'))
 
-    psystem:setDirection(shipAngle)
-    psystem:setLinearAcceleration(0, 0, -shipSpeed / 5 * math.cos(shipAngle), -shipSpeed / 5 * math.sin(shipAngle))
-    psystem:setPosition(-30 * math.cos(shipAngle), -30 * math.sin(shipAngle))
+    -- Thruster
+    thrustCurrentTic = thrustCurrentTic + 1
+    if thrustCurrentTic > 15 then
+        thrustCurrentTic = 0
+    end
+    local thrustCurrentFrame = math.floor(thrustCurrentTic / 5)
+    local thrustX = shipX - 30 * math.cos(shipAngle) 
+    local thrustY = shipY - 30 * math.sin(shipAngle)
     love.graphics.draw(psystem, shipX, shipY)
+    love.graphics.draw(thrustAnim[thrustCurrentFrame], thrustX, thrustY, shipAngle + math.pi / 2, 1, 1, thrustWidth / 2, thrustHeight / 2)
+
+    psystem:setDirection(shipAngle)
+    psystem:setLinearAcceleration(0, 0, -shipSpeed / 10 * math.cos(shipAngle), -shipSpeed / 10 * math.sin(shipAngle))
+    psystem:setPosition(-30 * math.cos(shipAngle), -30 * math.sin(shipAngle))
 end
