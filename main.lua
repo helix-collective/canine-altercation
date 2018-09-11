@@ -29,6 +29,7 @@ function love.update(dt)
     end
 
     -- update ship speed
+    -- TODO(jeeva): Think about math here, I don't think we need the if extra if statements
     shipSpeedFactor = math.sqrt(1-(math.abs(shipSpeed*shipSpeed)/(maxSpeed*maxSpeed)))
     if love.keyboard.isDown('up') then
         if shipSpeed > 0 then -- apply limiting factor if speed is too high
@@ -43,6 +44,7 @@ function love.update(dt)
             shipSpeed = shipSpeed - (shipSpeedDt * dt * shipSpeedFactor)
         end
     end
+
     if shipSpeed > maxSpeed then
         shipSpeed = maxSpeed
     end
