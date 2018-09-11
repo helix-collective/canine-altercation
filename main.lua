@@ -23,8 +23,17 @@ function love.load()
         -- (x,y,angle)
     }
 
-    -- Trailing partical sprites
     local img = love.graphics.newImage('t1.png')
+
+    -- Ship death explosion
+    deathPsystem = love.graphics.newParticleSystem(img, 32)
+    deathPsystem:setParticleLifetime(1, 100)
+    deathPsystem:setEmissionRate(1)
+    deathPsystem:setSizeVariation(1)
+    deathPsystem:setSizes(0.1, 0.07, 0.05)
+    deathPsystem:setLinearAcceleration(-200, -200, 200, 200)
+
+    -- Trailing partical sprites
     psystem = love.graphics.newParticleSystem(img, 32)
     psystem:setParticleLifetime(1, 3) -- Particles live at least 2s and at most 5s.
     psystem:setEmissionRate(5)
@@ -39,7 +48,8 @@ function love.load()
     thrustCurrentTic = 0
     thrustWidth = thrustAnim[0]:getWidth()
     thrustHeight = thrustAnim[0]:getHeight()
-    
+   
+    dead = false
 end
 
 function love.update(dt)
@@ -88,6 +98,12 @@ function love.update(dt)
     shipY = (shipY + shipSpeedY * dt) % arenaHeight
 
     psystem:update(dt)
+    
+    if dead then
+        dead = false
+        deathPsystem:emit(1000)
+    end
+    deathPsystem:update(dt)
 end 
 
 function love.keypressed(key)
@@ -97,6 +113,10 @@ function love.keypressed(key)
              y = shipY + math.sin(shipAngle) * 30,
              angle = shipAngle,
          })
+    end
+    if key == 'q' then 
+        dead = true
+        deathPsystem:reset()
     end
 end
 
@@ -148,4 +168,7 @@ function love.draw()
     psystem:setLinearAcceleration(0, 0, -shipSpeed / 10 * math.cos(shipAngle), -shipSpeed / 10 * math.sin(shipAngle))
     psystem:setPosition(-30 * math.cos(shipAngle), -30 * math.sin(shipAngle))
     love.graphics.draw(psystem, shipX, shipY)
+    
+    -- If ship is dead, spend a few tics drawing particles
+    love.graphics.draw(deathPsystem, shipX, shipY)
 end
