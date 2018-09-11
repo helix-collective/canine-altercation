@@ -6,7 +6,9 @@ end
 
 function love.update(dt)
     if love.keyboard.isDown('right') then
-         shipAngle = shipAngle + 10 * dt
+        shipAngle = shipAngle + 10 * dt
+    elseif love.keyboard.isDown('left') then
+        shipAngle = shipAngle - 10 * dt
     end
 end
 
