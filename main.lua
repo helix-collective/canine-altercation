@@ -93,7 +93,7 @@ function love.draw()
     }, '\n'))
 
     psystem:setDirection(shipAngle)
-    psystem:setLinearAcceleration(0, 0, -100 * math.cos(shipAngle), -100 * math.sin(shipAngle))
+    psystem:setLinearAcceleration(0, 0, -shipSpeed / 5 * math.cos(shipAngle), -shipSpeed / 5 * math.sin(shipAngle))
     psystem:setPosition(-30 * math.cos(shipAngle), -30 * math.sin(shipAngle))
     love.graphics.draw(psystem, shipX, shipY)
 end
