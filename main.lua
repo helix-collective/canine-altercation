@@ -140,7 +140,8 @@ function love.draw()
     local thrustY = shipY - 30 * math.sin(shipAngle)
 
     if shipSpeed > 0 then
-        love.graphics.draw(thrustAnim[thrustCurrentFrame], thrustX, thrustY, shipAngle + math.pi / 2, 1, 1, thrustWidth / 2, thrustHeight / 2)
+        local thrustScale = (1 - shipSpeedFactor) * 3
+        love.graphics.draw(thrustAnim[thrustCurrentFrame], thrustX, thrustY, shipAngle + math.pi / 2, thrustScale, thrustScale, thrustWidth / 2, thrustHeight / 2)
     end
     
     psystem:setDirection(shipAngle)
