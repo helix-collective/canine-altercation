@@ -190,6 +190,5 @@ function love.draw()
     -- love.graphics.draw(psystem, shipX, shipY)
     
     -- If ship is dead, spend a few tics drawing particles
-    -- TODO(prunge): Emits particles on each draw, which is a bit annoying, commented out for now
     love.graphics.draw(deathPsystem, shipX, shipY)
 end
