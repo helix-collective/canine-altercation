@@ -8,6 +8,7 @@ function love.load()
     arenaHeight = love.graphics.getHeight()
     maxSpeed = 500
     bulletSpeed = 700
+    shipRadius = 30
 
     -- Game State
     shipAngle = 0
@@ -97,23 +98,48 @@ function love.update(dt)
     end
 
     -- Update ship position
-    shipX = (shipX + shipSpeedX * dt) % arenaWidth
-    shipY = (shipY + shipSpeedY * dt) % arenaHeight
+    shipX = (shipX + shipSpeedX * dt)
+    shipY = (shipY + shipSpeedY * dt)
 
     -- psystem:update(dt)
-    
     if dead then
         dead = false
         deathPsystem:emit(1000)
     end
     deathPsystem:update(dt)
+
+    -- COLLISION DETECTION / Handling
+    --------------------------------
+    
+    -- Arena bounce
+    -- TODO(jeeva): generalise once we add asteroids + other ships (should be a general for each thing, for each thing, calc bounce)
+    -- TODO(jeeva): Make bounce smooth, to sleep to work out now :)
+    if ((shipX + shipRadius) >= arenaWidth) then
+      shipAngle = (1 - (shipAngle/math.pi))*math.pi + math.pi
+      shipSpeed = -shipSpeed
+    end
+
+    if ((shipX - shipRadius) <= 0) then
+      shipAngle = (1 - (shipAngle/math.pi))*math.pi + math.pi
+      shipSpeed = -shipSpeed
+    end
+
+    if ((shipY + shipRadius) >= arenaHeight) then
+      shipAngle = (1 - (shipAngle/math.pi))*math.pi
+      shipSpeed = -shipSpeed
+    end
+
+    if ((shipY - shipRadius) <= 0) then
+      shipAngle = (1 - (shipAngle/math.pi))*math.pi
+      shipSpeed = -shipSpeed
+    end
 end 
 
 function love.keypressed(key)
     if key == "space" then
          table.insert(bullets, {
-             x = shipX + math.cos(shipAngle) * 30,
-             y = shipY + math.sin(shipAngle) * 30,
+             x = shipX + math.cos(shipAngle) * shipRadius,
+             y = shipY + math.sin(shipAngle) * shipRadius,
              angle = shipAngle,
          })
     end
@@ -150,8 +176,8 @@ function love.draw()
         thrustCurrentTic = 0
     end
     local thrustCurrentFrame = math.floor(thrustCurrentTic / 5)
-    local thrustX = shipX - 30 * math.cos(shipAngle) 
-    local thrustY = shipY - 30 * math.sin(shipAngle)
+    local thrustX = shipX - shipRadius * math.cos(shipAngle) 
+    local thrustY = shipY - shipRadius * math.sin(shipAngle)
 
     if shipSpeed > 0 then
         local thrustScale = (1 - shipSpeedFactor) * 3
