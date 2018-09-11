@@ -30,7 +30,7 @@ function love.load()
     -- Ship death explosion
     deathPsystem = love.graphics.newParticleSystem(img, 32)
     deathPsystem:setParticleLifetime(1, 100)
-    deathPsystem:setEmissionRate(1)
+    deathPsystem:setEmissionRate(0)
     deathPsystem:setSizeVariation(1)
     deathPsystem:setSizes(0.1, 0.07, 0.05)
     deathPsystem:setLinearAcceleration(-200, -200, 200, 200)
@@ -191,5 +191,5 @@ function love.draw()
     
     -- If ship is dead, spend a few tics drawing particles
     -- TODO(prunge): Emits particles on each draw, which is a bit annoying, commented out for now
-    -- love.graphics.draw(deathPsystem, shipX, shipY)
+    love.graphics.draw(deathPsystem, shipX, shipY)
 end
