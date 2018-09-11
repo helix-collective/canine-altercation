@@ -138,10 +138,13 @@ function love.draw()
     local thrustCurrentFrame = math.floor(thrustCurrentTic / 5)
     local thrustX = shipX - 30 * math.cos(shipAngle) 
     local thrustY = shipY - 30 * math.sin(shipAngle)
-    love.graphics.draw(psystem, shipX, shipY)
-    love.graphics.draw(thrustAnim[thrustCurrentFrame], thrustX, thrustY, shipAngle + math.pi / 2, 1, 1, thrustWidth / 2, thrustHeight / 2)
 
+    if shipSpeed > 0 then
+        love.graphics.draw(thrustAnim[thrustCurrentFrame], thrustX, thrustY, shipAngle + math.pi / 2, 1, 1, thrustWidth / 2, thrustHeight / 2)
+    end
+    
     psystem:setDirection(shipAngle)
     psystem:setLinearAcceleration(0, 0, -shipSpeed / 10 * math.cos(shipAngle), -shipSpeed / 10 * math.sin(shipAngle))
     psystem:setPosition(-30 * math.cos(shipAngle), -30 * math.sin(shipAngle))
+    love.graphics.draw(psystem, shipX, shipY)
 end
