@@ -1,9 +1,11 @@
 function love.load()
+    love.window.maximize()
+    
     -- Game Constants
     anglePerDt = 10
-    shipSpeedDt = 100
-    arenaWidth = 800
-    arenaHeight = 600
+    shipSpeedDt = 200
+    arenaWidth = love.graphics.getWidth()
+    arenaHeight = love.graphics.getHeight()
 
     -- Game State
     shipX = arenaWidth / 2
@@ -15,6 +17,7 @@ function love.load()
     shipSpeedY = 0
     
     maxSpeed = 500
+    
 end
 
 function love.update(dt)
