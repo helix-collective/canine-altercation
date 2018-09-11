@@ -7,18 +7,23 @@ function love.load()
     arenaWidth = love.graphics.getWidth()
     arenaHeight = love.graphics.getHeight()
     maxSpeed = 500
+    bulletSpeed = 700
 
     -- Game State
-    shipX = arenaWidth / 2
-    shipY = arenaHeight / 2
-
     shipAngle = 0
     shipSpeed = 0
-    
-    -- Calculated Game State
+
     shipSpeedX = 0
     shipSpeedY = 0
     
+    shipX = arenaWidth / 2
+    shipY = arenaHeight / 2
+
+    bullets = {
+        -- (x,y,angle)
+    }
+
+    -- Trailing partical sprites
     local img = love.graphics.newImage('t1.png')
     psystem = love.graphics.newParticleSystem(img, 32)
     psystem:setParticleLifetime(1, 3) -- Particles live at least 2s and at most 5s.
@@ -61,11 +66,29 @@ function love.update(dt)
 
     shipSpeedX = math.cos(shipAngle) * shipSpeed
     shipSpeedY = math.sin(shipAngle) * shipSpeed
+
+    -- Update bullet positions
+    for _, bullet in ipairs(bullets) do
+        bullet.x = (bullet.x + math.cos(bullet.angle) * bulletSpeed * dt)
+        bullet.y = (bullet.y + math.sin(bullet.angle) * bulletSpeed * dt)
+    end
+
+    -- Update ship position
     shipX = (shipX + shipSpeedX * dt) % arenaWidth
     shipY = (shipY + shipSpeedY * dt) % arenaHeight
 
     psystem:update(dt)
 end 
+
+function love.keypressed(key)
+    if key == "space" then
+         table.insert(bullets, {
+             x = shipX + math.cos(shipAngle) * 30,
+             y = shipY + math.sin(shipAngle) * 30,
+             angle = shipAngle,
+         })
+    end
+end
 
 function love.draw()
     love.graphics.setColor(0, 0, 1)
@@ -79,6 +102,11 @@ function love.draw()
         shipY + math.sin(shipAngle) * shipCircleDistance,
         5
     )
+
+    for bulletIndex, bullet in ipairs(bullets) do
+        love.graphics.setColor(0, 1, 0)
+        love.graphics.circle('fill', bullet.x, bullet.y, 5)
+    end
 
     -- Debug
     love.graphics.setColor(1, 1, 1)
