@@ -28,7 +28,7 @@ function love.load()
     local img = love.graphics.newImage('t1.png')
 
     -- Ship death explosion
-    deathPsystem = love.graphics.newParticleSystem(img, 32)
+    deathPsystem = love.graphics.newParticleSystem(img, 200)
     deathPsystem:setParticleLifetime(1, 100)
     deathPsystem:setEmissionRate(0)
     deathPsystem:setSizeVariation(1)
