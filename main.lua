@@ -12,6 +12,7 @@ function love.load()
     -- Game State
     shipAngle = 0
     shipSpeed = 0
+    shipSprite = love.graphics.newImage("/assets/PNG/Sprites/Ships/spaceShips_009.png")
 
     shipSpeedX = 0
     shipSpeedY = 0
@@ -121,17 +122,8 @@ function love.keypressed(key)
 end
 
 function love.draw()
-    love.graphics.setColor(0, 0, 1)
-    love.graphics.circle('fill', shipX, shipY, 30)
-
-    love.graphics.setColor(0, 1, 1)
-    local shipCircleDistance = 20
-    love.graphics.circle(
-        'fill',
-        shipX + math.cos(shipAngle) * shipCircleDistance,
-        shipY + math.sin(shipAngle) * shipCircleDistance,
-        5
-    )
+    -- draw the ship
+    love.graphics.draw(shipSprite, shipX, shipY, shipAngle - math.pi/2, 0.75, 0.75, shipSprite:getWidth()/2, shipSprite:getHeight()/2)
 
     for bulletIndex, bullet in ipairs(bullets) do
         love.graphics.setColor(0, 1, 0)
