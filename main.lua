@@ -59,8 +59,8 @@ function love.update(dt)
         shipSpeed = -maxSpeed
     end
 
-    shipSpeedX = shipSpeedX + math.cos(shipAngle) * shipSpeed
-    shipSpeedY = shipSpeedY + math.sin(shipAngle) * shipSpeed
+    shipSpeedX = math.cos(shipAngle) * shipSpeed
+    shipSpeedY = math.sin(shipAngle) * shipSpeed
     shipX = (shipX + shipSpeedX * dt) % arenaWidth
     shipY = (shipY + shipSpeedY * dt) % arenaHeight
 
