@@ -6,6 +6,7 @@ function love.load()
     shipSpeedDt = 200
     arenaWidth = love.graphics.getWidth()
     arenaHeight = love.graphics.getHeight()
+    maxSpeed = 500
 
     -- Game State
     shipX = arenaWidth / 2
@@ -13,11 +14,11 @@ function love.load()
 
     shipAngle = 0
     shipSpeed = 0
+    
+    -- Calculated Game State
     shipSpeedX = 0
     shipSpeedY = 0
     
-    maxSpeed = 500
-
     local img = love.graphics.newImage('t1.png')
     psystem = love.graphics.newParticleSystem(img, 32)
     psystem:setParticleLifetime(1, 3) -- Particles live at least 2s and at most 5s.
@@ -35,6 +36,7 @@ function love.update(dt)
     end
 
     -- update ship speed
+    -- TODO(jeeva): Think about math here, I don't think we need the if extra if statements
     shipSpeedFactor = math.sqrt(1-(math.abs(shipSpeed*shipSpeed)/(maxSpeed*maxSpeed)))
     if love.keyboard.isDown('up') then
         if shipSpeed > 0 then -- apply limiting factor if speed is too high
@@ -49,6 +51,7 @@ function love.update(dt)
             shipSpeed = shipSpeed - (shipSpeedDt * dt * shipSpeedFactor)
         end
     end
+
     if shipSpeed > maxSpeed then
         shipSpeed = maxSpeed
     end
@@ -56,8 +59,8 @@ function love.update(dt)
         shipSpeed = -maxSpeed
     end
 
-    local shipSpeedX = shipSpeedX + math.cos(shipAngle) * shipSpeed
-    local shipSpeedY = shipSpeedY + math.sin(shipAngle) * shipSpeed
+    shipSpeedX = shipSpeedX + math.cos(shipAngle) * shipSpeed
+    shipSpeedY = shipSpeedY + math.sin(shipAngle) * shipSpeed
     shipX = (shipX + shipSpeedX * dt) % arenaWidth
     shipY = (shipY + shipSpeedY * dt) % arenaHeight
 
@@ -77,9 +80,7 @@ function love.draw()
         5
     )
 
-    -- Temporary
-    local shipSpeedX = shipSpeedX + math.cos(shipAngle) * shipSpeed
-    local shipSpeedY = shipSpeedY + math.sin(shipAngle) * shipSpeed
+    -- Debug
     love.graphics.setColor(1, 1, 1)
     love.graphics.print(table.concat({
         'shipAngle: '..shipAngle,
