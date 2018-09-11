@@ -6,6 +6,7 @@ function love.load()
     shipSpeedDt = 200
     arenaWidth = love.graphics.getWidth()
     arenaHeight = love.graphics.getHeight()
+    maxSpeed = 500
 
     -- Game State
     shipX = arenaWidth / 2
@@ -13,11 +14,10 @@ function love.load()
 
     shipAngle = 0
     shipSpeed = 0
+    
+    -- Calculated Game State
     shipSpeedX = 0
     shipSpeedY = 0
-    
-    maxSpeed = 500
-    
 end
 
 function love.update(dt)
@@ -52,8 +52,8 @@ function love.update(dt)
         shipSpeed = -maxSpeed
     end
 
-    local shipSpeedX = shipSpeedX + math.cos(shipAngle) * shipSpeed
-    local shipSpeedY = shipSpeedY + math.sin(shipAngle) * shipSpeed
+    shipSpeedX = shipSpeedX + math.cos(shipAngle) * shipSpeed
+    shipSpeedY = shipSpeedY + math.sin(shipAngle) * shipSpeed
     shipX = (shipX + shipSpeedX * dt) % arenaWidth
     shipY = (shipY + shipSpeedY * dt) % arenaHeight
 end 
@@ -71,9 +71,7 @@ function love.draw()
         5
     )
 
-    -- Temporary
-    local shipSpeedX = shipSpeedX + math.cos(shipAngle) * shipSpeed
-    local shipSpeedY = shipSpeedY + math.sin(shipAngle) * shipSpeed
+    -- Debug
     love.graphics.setColor(1, 1, 1)
     love.graphics.print(table.concat({
         'shipAngle: '..shipAngle,
