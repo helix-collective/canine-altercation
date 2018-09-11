@@ -35,11 +35,13 @@ function love.load()
     deathPsystem:setLinearAcceleration(-200, -200, 200, 200)
 
     -- Trailing partical sprites
-    psystem = love.graphics.newParticleSystem(img, 32)
-    psystem:setParticleLifetime(1, 3) -- Particles live at least 2s and at most 5s.
-    psystem:setEmissionRate(5)
-    psystem:setSizeVariation(1)
-    psystem:setSizes(0.03, 0.02)
+    -- NOTE(jeeva): Removed, as it should really leave a trail behind the ship, seems a bit harder to do, and not
+    --              important given we have awesome thruster sprites now :)
+    -- psystem = love.graphics.newParticleSystem(img, 32)
+    -- psystem:setParticleLifetime(1, 3) -- Particles live at least 2s and at most 5s.
+    -- psystem:setEmissionRate(5)
+    -- psystem:setSizeVariation(1)
+    -- psystem:setSizes(0.03, 0.02)
     
     thrustAnim = {}
     thrustAnim[0] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_002.png')
@@ -98,7 +100,7 @@ function love.update(dt)
     shipX = (shipX + shipSpeedX * dt) % arenaWidth
     shipY = (shipY + shipSpeedY * dt) % arenaHeight
 
-    psystem:update(dt)
+    -- psystem:update(dt)
     
     if dead then
         dead = false
@@ -156,11 +158,12 @@ function love.draw()
         love.graphics.draw(thrustAnim[thrustCurrentFrame], thrustX, thrustY, shipAngle + math.pi / 2, thrustScale, thrustScale, thrustWidth / 2, thrustHeight / 2)
     end
     
-    psystem:setDirection(shipAngle)
-    psystem:setLinearAcceleration(0, 0, -shipSpeed / 10 * math.cos(shipAngle), -shipSpeed / 10 * math.sin(shipAngle))
-    psystem:setPosition(-30 * math.cos(shipAngle), -30 * math.sin(shipAngle))
-    love.graphics.draw(psystem, shipX, shipY)
+    -- psystem:setDirection(shipAngle)
+    -- psystem:setLinearAcceleration(0, 0, -shipSpeed / 10 * math.cos(shipAngle), -shipSpeed / 10 * math.sin(shipAngle))
+    -- psystem:setPosition(-30 * math.cos(shipAngle), -30 * math.sin(shipAngle))
+    -- love.graphics.draw(psystem, shipX, shipY)
     
     -- If ship is dead, spend a few tics drawing particles
-    love.graphics.draw(deathPsystem, shipX, shipY)
+    -- TODO(prunge): Emits particles on each draw, which is a bit annoying, commented out for now
+    -- love.graphics.draw(deathPsystem, shipX, shipY)
 end
