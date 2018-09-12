@@ -383,7 +383,7 @@ function love.draw()
         local thrustX = ship.body:getX() - ship.shape:getRadius() * math.cos(ship.body:getAngle()) 
         local thrustY = ship.body:getY() - ship.shape:getRadius() * math.sin(ship.body:getAngle())
     
-        if ship.shipSpeed > 0 then
+        if ship.shipSpeed > 0 and not(ship.dead) then
             local thrustScale = (1 - ship.shipSpeedFactor) * 3
             love.graphics.draw(thrustAnim[thrustCurrentFrame], thrustX, thrustY, ship.body:getAngle() + math.pi / 2, thrustScale, thrustScale, thrustWidth / 2, thrustHeight / 2)
         end
