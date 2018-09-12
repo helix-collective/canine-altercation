@@ -209,6 +209,12 @@ function love.update(dt)
     elseif love.keyboard.isDown('left') then
         objects.ships[1].body:setAngle(objects.ships[1].body:getAngle() - anglePerDt * dt)
     end
+    if love.keyboard.isDown('d') then
+        objects.ships[2].body:setAngle(objects.ships[2].body:getAngle() + anglePerDt * dt)
+    elseif love.keyboard.isDown('a') then
+        objects.ships[2].body:setAngle(objects.ships[2].body:getAngle() - anglePerDt * dt)
+    end
+    
 
     -- update ship speed
     -- TODO(jeeva): Think about math here, I don't think we need the if extra if statements
@@ -227,6 +233,19 @@ function love.update(dt)
             objects.ships[1].shipSpeed = objects.ships[1].shipSpeed - (shipSpeedDt * dt)
         else
             objects.ships[1].shipSpeed = objects.ships[1].shipSpeed - (shipSpeedDt * dt * objects.ships[1].shipSpeedFactor)
+        end
+    end
+    if love.keyboard.isDown('w') then
+        if objects.ships[2].shipSpeed > 0 then -- apply limiting factor if speed is too high
+            objects.ships[2].shipSpeed = objects.ships[2].shipSpeed + (shipSpeedDt * dt * objects.ships[2].shipSpeedFactor)
+        else
+            objects.ships[2].shipSpeed = objects.ships[2].shipSpeed + (shipSpeedDt * dt)
+        end
+    elseif love.keyboard.isDown('s') then
+        if objects.ships[2].shipSpeed > 0 then -- apply limiting factor if backwards speed is too high
+            objects.ships[2].shipSpeed = objects.ships[2].shipSpeed - (shipSpeedDt * dt)
+        else
+            objects.ships[2].shipSpeed = objects.ships[2].shipSpeed - (shipSpeedDt * dt * objects.ships[2].shipSpeedFactor)
         end
     end
 
@@ -264,14 +283,10 @@ function love.update(dt)
     -- TODO(jeeva): generalise once we add asteroids + other ships (should be a general for each thing, for each thing, calc bounce)
     -- TODO(jeeva): Make bounce smooth, to sleep to work out now :)
     
-end 
+end
 
 function love.keypressed(key)
-    if objects.ships[1].dead then
-        return
-    end
-    
-    if key == "space" then
+    if not(objects.ships[1].dead) and key == "space" then
         local newBullet = {}
         newBullet.body = love.physics.newBody(world, 
                                 objects.ships[1].body:getX() + math.cos(objects.ships[1].body:getAngle()) * shipRadius,
@@ -289,6 +304,7 @@ function love.keypressed(key)
         
         table.insert(objects.bullets, newBullet)
     end
+
     if key == 'q' then 
         objects.ships[1].dead = true
         objects.ships[1].deathPsystem:reset()
