@@ -11,15 +11,7 @@ function love.load()
     shipRadius = 30
 
     -- Game State
-    shipAngle = 0
-    shipSpeed = 0
     shipSprite = love.graphics.newImage("/assets/PNG/Sprites/Ships/spaceShips_009.png")
-
-    shipSpeedX = 0
-    shipSpeedY = 0
-    
-    shipX = arenaWidth / 2
-    shipY = arenaHeight / 2
 
     bullets = {
         -- (x,y,angle)
@@ -112,12 +104,14 @@ function love.load()
     objects.rightWall.fixture:setRestitution(0.2)
     objects.rightWall.fixture:setUserData(objects.rightWall)
     
+    -- change this to true to make ships reflect off walls
+    shipsReflectOffWalls = false
+    
 end
 
 
 
 function beginContact(a, b, coll)
-    
     
     -- Find the ship that collided
     local colShip
@@ -136,7 +130,8 @@ function beginContact(a, b, coll)
     -- so just mark it and process next tic
     colShip.bounceProgress = 1
     colShip.bounceType = colWall.reflectType
-    if (colWall.reflectType == 'y') then
+    if ((not shipsReflectOffWalls and colWall.reflectType == 'y') or 
+        (shipsReflectOffWalls and colWall.reflectType == 'x')) then
        colShip.bounceAngle = (1 - (colShip.body:getAngle()/math.pi))*math.pi + math.pi
     else
         colShip.bounceAngle = (1 - (colShip.body:getAngle()/math.pi))*math.pi 
@@ -151,7 +146,6 @@ function endContact(a, b, coll)
 end
 
 function preSolve(a, b, coll)
-
 end
 
 function postSolve(a, b, coll, normalimpulse, tangentimpulse)
@@ -165,7 +159,9 @@ function love.update(dt)
     -- process any pending bounces
     if (objects.ship.bounceProgress == 1) then
         objects.ship.body:setAngle(objects.ship.bounceAngle)
-        objects.ship.shipSpeed = -objects.ship.shipSpeed
+        if not shipsReflectOffWalls then 
+            objects.ship.shipSpeed = -objects.ship.shipSpeed
+        end
         objects.ship.bounceProgress = 0
     end
 
@@ -260,8 +256,6 @@ function love.draw()
         'shipX: '..objects.ship.body:getX(),
         'shipY: '..objects.ship.body:getY(),
         'shipSpeed: '..objects.ship.shipSpeed,
-        'shipSpeedX: '..shipSpeedX,
-        'shipSpeedY: '..shipSpeedY,
         'shipSpeedFactor: '..objects.ship.shipSpeedFactor,
         'collision: '..collisionText
     }, '\n'))
