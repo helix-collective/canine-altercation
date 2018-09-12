@@ -10,6 +10,8 @@ function love.load()
     bulletSpeed = 700
     shipRadius = 30
 
+    CATEGORY_BULLET = 2
+
     -- Game State
     shipSprite = love.graphics.newImage("/assets/PNG/Sprites/Ships/spaceShips_009.png")
 
@@ -249,6 +251,8 @@ function love.keypressed(key)
         newBullet.shape = love.physics.newCircleShape(5)
         newBullet.fixture = love.physics.newFixture(newBullet.body, newBullet.shape, 1)
         newBullet.fixture:setRestitution(0.1)
+        newBullet.fixture:setCategory(CATEGORY_BULLET)
+        newBullet.fixture:setMask(CATEGORY_BULLET)
         newBullet.fixture:setUserData(newBullet) 
         newBullet.type = 'bullet'
         
