@@ -28,15 +28,6 @@ function love.load()
     deathPsystem:setSizes(0.1, 0.07, 0.05)
     deathPsystem:setLinearAcceleration(-200, -200, 200, 200)
 
-    -- Trailing partical sprites
-    -- NOTE(jeeva): Removed, as it should really leave a trail behind the ship, seems a bit harder to do, and not
-    --              important given we have awesome thruster sprites now :)
-    -- psystem = love.graphics.newParticleSystem(img, 32)
-    -- psystem:setParticleLifetime(1, 3) -- Particles live at least 2s and at most 5s.
-    -- psystem:setEmissionRate(5)
-    -- psystem:setSizeVariation(1)
-    -- psystem:setSizes(0.03, 0.02)
-    
     thrustAnim = {}
     thrustAnim[1] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_001.png')
     thrustAnim[2] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_002.png')
@@ -231,54 +222,23 @@ function love.update(dt)
     end
     
 
-    -- update ship speed
-    -- TODO(jeeva): Think about math here, I don't think we need the if extra if statements
-    for shipIndex, ship in ipairs(objects.ships) do
-        ship.shipSpeedFactor = math.sqrt(1-(math.abs(ship.shipSpeed*ship.shipSpeed)/(maxSpeed*maxSpeed)))
-    end
-
+    -- Accelerate ships
     if love.keyboard.isDown('up') then
-        if objects.ships[1].shipSpeed > 0 then -- apply limiting factor if speed is too high
-            objects.ships[1].shipSpeed = objects.ships[1].shipSpeed + (shipSpeedDt * dt * objects.ships[1].shipSpeedFactor)
-        else
-            objects.ships[1].shipSpeed = objects.ships[1].shipSpeed + (shipSpeedDt * dt)
-        end
+        objects.ships[1].shipSpeed = objects.ships[1].shipSpeed + math.max(0, maxSpeed - objects.ships[1].shipSpeed) * dt
     elseif love.keyboard.isDown('down') then
-        if objects.ships[1].shipSpeed > 0 then -- apply limiting factor if backwards speed is too high
-            objects.ships[1].shipSpeed = objects.ships[1].shipSpeed - (shipSpeedDt * dt)
-        else
-            objects.ships[1].shipSpeed = objects.ships[1].shipSpeed - (shipSpeedDt * dt * objects.ships[1].shipSpeedFactor)
-        end
-    end
-    if love.keyboard.isDown('w') then
-        if objects.ships[2].shipSpeed > 0 then -- apply limiting factor if speed is too high
-            objects.ships[2].shipSpeed = objects.ships[2].shipSpeed + (shipSpeedDt * dt * objects.ships[2].shipSpeedFactor)
-        else
-            objects.ships[2].shipSpeed = objects.ships[2].shipSpeed + (shipSpeedDt * dt)
-        end
-    elseif love.keyboard.isDown('s') then
-        if objects.ships[2].shipSpeed > 0 then -- apply limiting factor if backwards speed is too high
-            objects.ships[2].shipSpeed = objects.ships[2].shipSpeed - (shipSpeedDt * dt)
-        else
-            objects.ships[2].shipSpeed = objects.ships[2].shipSpeed - (shipSpeedDt * dt * objects.ships[2].shipSpeedFactor)
-        end
+        objects.ships[1].shipSpeed = objects.ships[1].shipSpeed + math.min(0, -maxSpeed - objects.ships[1].shipSpeed) * dt
     end
 
-    for shipIndex, ship in ipairs(objects.ships) do
-        if ship.shipSpeed > maxSpeed then
-            ship.shipSpeed = maxSpeed
-        end
-        if ship.shipSpeed < -maxSpeed then
-            ship.shipSpeed = -maxSpeed
-        end
+    if love.keyboard.isDown('w') then
+        objects.ships[2].shipSpeed = objects.ships[2].shipSpeed + math.max(0, maxSpeed - objects.ships[2].shipSpeed) * dt
+    elseif love.keyboard.isDown('s') then
+        objects.ships[2].shipSpeed = objects.ships[2].shipSpeed + math.min(0, -maxSpeed - objects.ships[2].shipSpeed) * dt
     end
 
     for shipIndex, ship in ipairs(objects.ships) do
         ship.body:setLinearVelocity(math.cos(ship.body:getAngle()) * ship.shipSpeed,
                                     math.sin(ship.body:getAngle()) * ship.shipSpeed)
     end
-
-    -- psystem:update(dt)
 
     for shipIndex, ship in ipairs(objects.ships) do
         if ship.dead and not(ship.deadAnimationDone) then
@@ -369,7 +329,6 @@ function love.draw()
         'shipX: '..objects.ships[1].body:getX(),
         'shipY: '..objects.ships[1].body:getY(),
         'shipSpeed: '..objects.ships[1].shipSpeed,
-        'shipSpeedFactor: '..objects.ships[1].shipSpeedFactor,
         'collision: '..collisionText
     }, '\n'))
 
@@ -384,7 +343,7 @@ function love.draw()
         local thrustY = ship.body:getY() - ship.shape:getRadius() * math.sin(ship.body:getAngle())
     
         if ship.shipSpeed > 0 and not(ship.dead) then
-            local thrustScale = (1 - ship.shipSpeedFactor) * 3
+            local thrustScale = ship.shipSpeed / maxSpeed * 3
             love.graphics.draw(thrustAnim[thrustCurrentFrame], thrustX, thrustY, ship.body:getAngle() + math.pi / 2, thrustScale, thrustScale, thrustWidth / 2, thrustHeight / 2)
         end
 
@@ -393,11 +352,4 @@ function love.draw()
             love.graphics.draw(ship.deathPsystem, ship.body:getX(), ship.body:getY())
         end
     end
-    
-    -- psystem:setDirection(shipAngle)
-    -- psystem:setLinearAcceleration(0, 0, -shipSpeed / 10 * math.cos(shipAngle), -shipSpeed / 10 * math.sin(shipAngle))
-    -- psystem:setPosition(-30 * math.cos(shipAngle), -30 * math.sin(shipAngle))
-    -- love.graphics.draw(psystem, shipX, shipY)
-    
-    
 end
