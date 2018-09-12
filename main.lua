@@ -14,8 +14,6 @@ function love.load()
     SHIP_CATEGORY_BASE = 10
 
     -- Game State
-    shipSprite = love.graphics.newImage("/assets/PNG/Sprites/Ships/spaceShips_009.png")
-
     collisionText = ''
 
     local img = love.graphics.newImage('t1.png')
@@ -36,7 +34,20 @@ function love.load()
     thrustCurrentTic = 0
     thrustWidth = thrustAnim[1]:getWidth()
     thrustHeight = thrustAnim[1]:getHeight()
-   
+
+    effect = love.graphics.newShader[[
+    extern vec4 tint;
+    extern number strength;
+    vec4 effect(vec4 color, Image texture, vec2 tc, vec2 _) {
+      color = Texel(texture, tc);
+      number luma = dot(vec3(0.299f, 0.587f, 0.114f), color.rgb);
+      return mix(color, tint * luma, strength);
+    }]]
+    effect:send("tint", {
+        0.0, 1, 1, 1
+    })
+    effect:send("strength", 0.4)
+
     love.physics.setMeter(64)
     world = love.physics.newWorld(0, 0, arenaWidth, arenaHeight)
     world:setCallbacks(beginContact, endContact, preSolve, postSolve)
@@ -54,6 +65,7 @@ function love.load()
     ship1.fixture:setCategory(SHIP_CATEGORY_BASE + 1)
     ship1.shipSpeed = 0
     ship1.deathPsystem = deathPsystem:clone()
+    ship1.sprite = love.graphics.newImage("/assets/PNG/Sprites/Ships/spaceShips_009.png")
     table.insert(objects.ships, ship1)
 
     local ship2 = {}
@@ -67,6 +79,8 @@ function love.load()
     ship2.fixture:setCategory(SHIP_CATEGORY_BASE + 2)
     ship2.shipSpeed = 0
     ship2.deathPsystem = deathPsystem:clone()
+    ship2.sprite = love.graphics.newImage("/assets/PNG/Sprites/Ships/spaceShips_004.png")
+    --ship2.shader = effect
     table.insert(objects.ships, ship2)
     
     objects.topWall = {}
@@ -113,20 +127,6 @@ function love.load()
 
     -- change this to true to make ships reflect off walls
     shipsReflectOffWalls = false
-
-    effect = love.graphics.newShader[[
-    extern vec4 tint;
-    extern number strength;
-    vec4 effect(vec4 color, Image texture, vec2 tc, vec2 _) {
-      color = Texel(texture, tc);
-      number luma = dot(vec3(0.299f, 0.587f, 0.114f), color.rgb);
-      return mix(color, tint * luma, strength);
-    }]]
-    effect:send("tint", {
-        0.0, 1, 1, 1
-    })
-    effect:send("strength", 0.4)
-    
 end
 
 
@@ -305,14 +305,10 @@ end
 
 function love.draw()
     -- draw the ship
-    --love.graphics.draw(shipSprite, shipX, shipY, shipAngle - math.pi/2, 0.75, 0.75, shipSprite:getWidth()/2, shipSprite:getHeight()/2)
-
     for shipIndex, ship in ipairs(objects.ships) do
         if not(ship.dead) then
-            if (shipIndex > 1) then
-                love.graphics.setShader(effect)
-            end
-            love.graphics.draw(shipSprite, ship.body:getX(), ship.body:getY(), ship.body:getAngle() - math.pi/2, 0.75, 0.75, shipSprite:getWidth()/2, shipSprite:getHeight()/2)
+            love.graphics.setShader(ship.shader)
+            love.graphics.draw(ship.sprite, ship.body:getX(), ship.body:getY(), ship.body:getAngle() - math.pi/2, 0.75, 0.75, ship.sprite:getWidth()/2, ship.sprite:getHeight()/2)
             love.graphics.setShader()
         end
     end
