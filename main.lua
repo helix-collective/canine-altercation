@@ -304,6 +304,24 @@ function love.keypressed(key)
         
         table.insert(objects.bullets, newBullet)
     end
+    if not(objects.ships[2].dead) and key == "tab" then
+        local newBullet = {}
+        newBullet.body = love.physics.newBody(world,
+            objects.ships[2].body:getX() + math.cos(objects.ships[2].body:getAngle()) * shipRadius,
+            objects.ships[2].body:getY() + math.sin(objects.ships[2].body:getAngle()) * shipRadius,
+            "dynamic")
+        newBullet.body:setLinearVelocity(math.cos(objects.ships[2].body:getAngle()) * bulletSpeed,
+            math.sin(objects.ships[2].body:getAngle()) * bulletSpeed)
+        newBullet.shape = love.physics.newCircleShape(5)
+        newBullet.fixture = love.physics.newFixture(newBullet.body, newBullet.shape, 1)
+        newBullet.fixture:setRestitution(0.1)
+        newBullet.fixture:setCategory(CATEGORY_BULLET)
+        newBullet.fixture:setMask(CATEGORY_BULLET)
+        newBullet.fixture:setUserData(newBullet)
+        newBullet.type = 'bullet'
+
+        table.insert(objects.bullets, newBullet)
+    end
 
     if key == 'q' then 
         objects.ships[1].dead = true
