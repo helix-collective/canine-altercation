@@ -114,32 +114,44 @@ end
 
 
 function beginContact(a, b, coll)
+
+    collisionText = a:getUserData().type..' with '..b:getUserData().type
     
     -- Find the ship that collided
     local colShip
     local colWall
+    local colBullet
+
     if a:getUserData().type == 'ship' then
         colShip = a:getUserData()
-        colWall = b:getUserData()
     elseif b:getUserData().type == 'ship' then
         colShip = b:getUserData()
+    end
+    if a:getUserData().type == 'wall' then
         colWall = a:getUserData()
-    else
-        return
+    elseif b:getUserData().type == 'wall' then
+        colWall = b:getUserData()
+    end
+    if a:getUserData().type == 'bullet' then
+        colBullet = a:getUserData()
+    elseif b:getUserData().type == 'bullet' then
+        colBullet = b:getUserData()
     end
 
     -- Seems like you can't update objects in callbacks (results in error)
     -- so just mark it and process next tic
-    colShip.bounceProgress = 1
-    colShip.bounceType = colWall.reflectType
-    if ((not shipsReflectOffWalls and colWall.reflectType == 'y') or 
-        (shipsReflectOffWalls and colWall.reflectType == 'x')) then
-       colShip.bounceAngle = (1 - (colShip.body:getAngle()/math.pi))*math.pi + math.pi
-    else
-        colShip.bounceAngle = (1 - (colShip.body:getAngle()/math.pi))*math.pi 
+    if (not (colShip == nil) and not (colWall == nil)) then
+        colShip.bounceProgress = 1
+        colShip.bounceType = colWall.reflectType
+        if ((not shipsReflectOffWalls and colWall.reflectType == 'y') or 
+            (shipsReflectOffWalls and colWall.reflectType == 'x')) then
+           colShip.bounceAngle = (1 - (colShip.body:getAngle()/math.pi))*math.pi + math.pi
+        else
+            colShip.bounceAngle = (1 - (colShip.body:getAngle()/math.pi))*math.pi 
+        end
+    elseif (not (colWall == nil) and not (colBullet == nil)) then
+        colBullet.dead = true -- remove a bullet when it hits the wall in the next tic
     end
-
-    collisionText = a:getUserData().type..' with '..b:getUserData().type
     
 end
 
@@ -165,6 +177,13 @@ function love.update(dt)
             objects.ship.shipSpeed = -objects.ship.shipSpeed
         end
         objects.ship.bounceProgress = 0
+    end
+    
+    -- remove any bullets that have hit a wall
+    for bulletIndex, bullet in ipairs(objects.bullets) do
+        if (bullet.dead) then
+            table.remove(objects.bullets, bulletIndex)
+        end
     end
 
     -- update ship angle
