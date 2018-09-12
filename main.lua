@@ -10,7 +10,8 @@ function love.load()
     bulletSpeed = 700
     shipRadius = 30
 
-    CATEGORY_BULLET = 2
+    CATEGORY_BULLET = 9
+    SHIP_CATEGORY_BASE = 10
 
     -- Game State
     shipSprite = love.graphics.newImage("/assets/PNG/Sprites/Ships/spaceShips_009.png")
@@ -55,10 +56,11 @@ function love.load()
     ship1.type = 'ship'
     ship1.body = love.physics.newBody(world, arenaWidth / 4, arenaHeight / 4, "dynamic") --place the body in the center of the world and make it dynamic, so it can move around
     ship1.body:setAngularDamping(1000)  --for colissions
-    ship1.shape = love.physics.newCircleShape(20)
+    ship1.shape = love.physics.newCircleShape(shipRadius)
     ship1.fixture = love.physics.newFixture(ship1.body, ship1.shape, 1) -- Attach fixture to body and give it a density of 1.
     ship1.fixture:setRestitution(0.1) 
     ship1.fixture:setUserData(ship1)
+    ship1.fixture:setCategory(SHIP_CATEGORY_BASE + 1)
     ship1.shipSpeed = 0
     ship1.deathPsystem = deathPsystem:clone()
     table.insert(objects.ships, ship1)
@@ -67,10 +69,11 @@ function love.load()
     ship2.type = 'ship'
     ship2.body = love.physics.newBody(world, arenaWidth / 4 * 3, arenaHeight / 4 * 3, "dynamic") --place the body in the center of the world and make it dynamic, so it can move around
     ship2.body:setAngularDamping(1000)  --for colissions
-    ship2.shape = love.physics.newCircleShape(20)
+    ship2.shape = love.physics.newCircleShape(shipRadius)
     ship2.fixture = love.physics.newFixture(ship2.body, ship2.shape, 1) -- Attach fixture to body and give it a density of 1.
     ship2.fixture:setRestitution(0.1)
     ship2.fixture:setUserData(ship2)
+    ship2.fixture:setCategory(SHIP_CATEGORY_BASE + 2)
     ship2.shipSpeed = 0
     ship2.deathPsystem = deathPsystem:clone()
     table.insert(objects.ships, ship2)
@@ -297,8 +300,8 @@ function love.keypressed(key)
         newBullet.shape = love.physics.newCircleShape(5)
         newBullet.fixture = love.physics.newFixture(newBullet.body, newBullet.shape, 1)
         newBullet.fixture:setRestitution(0.1)
-        newBullet.fixture:setCategory(CATEGORY_BULLET)
-        newBullet.fixture:setMask(CATEGORY_BULLET)
+        newBullet.fixture:setCategory(CATEGORY_BULLET, SHIP_CATEGORY_BASE + 1)
+        newBullet.fixture:setMask(CATEGORY_BULLET, SHIP_CATEGORY_BASE + 1)
         newBullet.fixture:setUserData(newBullet) 
         newBullet.type = 'bullet'
         
@@ -315,8 +318,8 @@ function love.keypressed(key)
         newBullet.shape = love.physics.newCircleShape(5)
         newBullet.fixture = love.physics.newFixture(newBullet.body, newBullet.shape, 1)
         newBullet.fixture:setRestitution(0.1)
-        newBullet.fixture:setCategory(CATEGORY_BULLET)
-        newBullet.fixture:setMask(CATEGORY_BULLET)
+        newBullet.fixture:setCategory(CATEGORY_BULLET, SHIP_CATEGORY_BASE + 2)
+        newBullet.fixture:setMask(CATEGORY_BULLET, SHIP_CATEGORY_BASE + 2)
         newBullet.fixture:setUserData(newBullet)
         newBullet.type = 'bullet'
 
