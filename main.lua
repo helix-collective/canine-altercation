@@ -15,10 +15,6 @@ function love.load()
     -- Game State
     shipSprite = love.graphics.newImage("/assets/PNG/Sprites/Ships/spaceShips_009.png")
 
-    bullets = {
-        -- (x,y,angle)
-    }
-    
     collisionText = ''
 
     local img = love.graphics.newImage('t1.png')
