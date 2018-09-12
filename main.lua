@@ -45,8 +45,6 @@ function love.load()
     thrustWidth = thrustAnim[0]:getWidth()
     thrustHeight = thrustAnim[0]:getHeight()
    
-    dead = false
-
     love.physics.setMeter(64)
     world = love.physics.newWorld(0, 0, arenaWidth, arenaHeight)
     world:setCallbacks(beginContact, endContact, preSolve, postSolve)
@@ -149,6 +147,10 @@ function beginContact(a, b, coll)
         end
     elseif (not (colWall == nil) and not (colBullet == nil)) then
         colBullet.dead = true -- remove a bullet when it hits the wall in the next tic
+    elseif (not (colShip == nil) and not (colBullet == nil)) then
+        colShip.dead = true
+        colBullet.dead = true
+        deathPsystem:reset()
     end
     
 end
@@ -220,8 +222,8 @@ function love.update(dt)
                                         math.sin(objects.ship.body:getAngle()) * objects.ship.shipSpeed)
 
     -- psystem:update(dt)
-    if dead then
-        dead = false
+    if objects.ship.dead and not(objects.ship.deadAnimationDone) then
+        objects.ship.deadAnimationDone = true
         deathPsystem:emit(1000)
     end
     deathPsystem:update(dt)
@@ -236,6 +238,10 @@ function love.update(dt)
 end 
 
 function love.keypressed(key)
+    if objects.ship.dead then
+        return
+    end
+    
     if key == "space" then
         local newBullet = {}
         newBullet.body = love.physics.newBody(world, 
@@ -255,7 +261,7 @@ function love.keypressed(key)
         table.insert(objects.bullets, newBullet)
     end
     if key == 'q' then 
-        dead = true
+        objects.ship.dead = true
         deathPsystem:reset()
     end
 end
@@ -264,8 +270,9 @@ function love.draw()
     -- draw the ship
     --love.graphics.draw(shipSprite, shipX, shipY, shipAngle - math.pi/2, 0.75, 0.75, shipSprite:getWidth()/2, shipSprite:getHeight()/2)
 
-    love.graphics.draw(shipSprite, objects.ship.body:getX(), objects.ship.body:getY(), objects.ship.body:getAngle() - math.pi/2, 0.75, 0.75, shipSprite:getWidth()/2, shipSprite:getHeight()/2)
-    
+    if not(objects.ship.dead) then
+        love.graphics.draw(shipSprite, objects.ship.body:getX(), objects.ship.body:getY(), objects.ship.body:getAngle() - math.pi/2, 0.75, 0.75, shipSprite:getWidth()/2, shipSprite:getHeight()/2)
+    end
 
     for bulletIndex, bullet in ipairs(objects.bullets) do
         love.graphics.setColor(0, 1, 0)
