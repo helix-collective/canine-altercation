@@ -50,15 +50,28 @@ function love.load()
     world:setCallbacks(beginContact, endContact, preSolve, postSolve)
 
     objects = {} -- table to hold all our physical objects
-    objects.ship = {}
-    objects.ship.type = 'ship'
-    objects.ship.body = love.physics.newBody(world, arenaWidth / 2, arenaHeight / 2, "dynamic") --place the body in the center of the world and make it dynamic, so it can move around
-    objects.ship.body:setAngularDamping(1000)  --for colissions
-    objects.ship.shape = love.physics.newCircleShape(20)
-    objects.ship.fixture = love.physics.newFixture(objects.ship.body, objects.ship.shape, 1) -- Attach fixture to body and give it a density of 1.
-    objects.ship.fixture:setRestitution(0.1) 
-    objects.ship.fixture:setUserData(objects.ship)
-    objects.ship.shipSpeed = 0
+    objects.ships = {}
+    local ship1 = {}
+    ship1.type = 'ship'
+    ship1.body = love.physics.newBody(world, arenaWidth / 4, arenaHeight / 4, "dynamic") --place the body in the center of the world and make it dynamic, so it can move around
+    ship1.body:setAngularDamping(1000)  --for colissions
+    ship1.shape = love.physics.newCircleShape(20)
+    ship1.fixture = love.physics.newFixture(ship1.body, ship1.shape, 1) -- Attach fixture to body and give it a density of 1.
+    ship1.fixture:setRestitution(0.1) 
+    ship1.fixture:setUserData(ship1)
+    ship1.shipSpeed = 0
+    table.insert(objects.ships, ship1)
+
+    local ship2 = {}
+    ship2.type = 'ship'
+    ship2.body = love.physics.newBody(world, arenaWidth / 4 * 3, arenaHeight / 4 * 3, "dynamic") --place the body in the center of the world and make it dynamic, so it can move around
+    ship2.body:setAngularDamping(1000)  --for colissions
+    ship2.shape = love.physics.newCircleShape(20)
+    ship2.fixture = love.physics.newFixture(ship2.body, ship2.shape, 1) -- Attach fixture to body and give it a density of 1.
+    ship2.fixture:setRestitution(0.1)
+    ship2.fixture:setUserData(ship2)
+    ship2.shipSpeed = 0
+    table.insert(objects.ships, ship2)
     
     objects.topWall = {}
     objects.topWall.type = 'wall'
@@ -171,12 +184,14 @@ function love.update(dt)
     world:update(dt)
 
     -- process any pending bounces
-    if (objects.ship.bounceProgress == 1) then
-        objects.ship.body:setAngle(objects.ship.bounceAngle)
-        if not shipsReflectOffWalls then 
-            objects.ship.shipSpeed = -objects.ship.shipSpeed
+    for shipIndex, ship in ipairs(objects.ships) do
+        if (ship.bounceProgress == 1) then
+            ship.body:setAngle(ship.bounceAngle)
+            if not shipsReflectOffWalls then 
+                ship.shipSpeed = -ship.shipSpeed
+            end
+            ship.bounceProgress = 0
         end
-        objects.ship.bounceProgress = 0
     end
     
     -- remove any bullets that have hit a wall
@@ -188,44 +203,54 @@ function love.update(dt)
 
     -- update ship angle
     if love.keyboard.isDown('right') then
-        objects.ship.body:setAngle(objects.ship.body:getAngle() + anglePerDt * dt)
+        objects.ships[1].body:setAngle(objects.ships[1].body:getAngle() + anglePerDt * dt)
     elseif love.keyboard.isDown('left') then
-        objects.ship.body:setAngle(objects.ship.body:getAngle() - anglePerDt * dt)
+        objects.ships[1].body:setAngle(objects.ships[1].body:getAngle() - anglePerDt * dt)
     end
 
     -- update ship speed
     -- TODO(jeeva): Think about math here, I don't think we need the if extra if statements
-    objects.ship.shipSpeedFactor = math.sqrt(1-(math.abs(objects.ship.shipSpeed*objects.ship.shipSpeed)/(maxSpeed*maxSpeed)))
+    for shipIndex, ship in ipairs(objects.ships) do
+        ship.shipSpeedFactor = math.sqrt(1-(math.abs(ship.shipSpeed*ship.shipSpeed)/(maxSpeed*maxSpeed)))
+    end
 
     if love.keyboard.isDown('up') then
-        if objects.ship.shipSpeed > 0 then -- apply limiting factor if speed is too high
-            objects.ship.shipSpeed = objects.ship.shipSpeed + (shipSpeedDt * dt * objects.ship.shipSpeedFactor)
+        if objects.ships[1].shipSpeed > 0 then -- apply limiting factor if speed is too high
+            objects.ships[1].shipSpeed = objects.ships[1].shipSpeed + (shipSpeedDt * dt * objects.ships[1].shipSpeedFactor)
         else
-            objects.ship.shipSpeed = objects.ship.shipSpeed + (shipSpeedDt * dt)
+            objects.ships[1].shipSpeed = objects.ships[1].shipSpeed + (shipSpeedDt * dt)
         end
     elseif love.keyboard.isDown('down') then
-        if objects.ship.shipSpeed > 0 then -- apply limiting factor if backwards speed is too high
-            objects.ship.shipSpeed = objects.ship.shipSpeed - (shipSpeedDt * dt)
+        if objects.ships[1].shipSpeed > 0 then -- apply limiting factor if backwards speed is too high
+            objects.ships[1].shipSpeed = objects.ships[1].shipSpeed - (shipSpeedDt * dt)
         else
-            objects.ship.shipSpeed = objects.ship.shipSpeed - (shipSpeedDt * dt * objects.ship.shipSpeedFactor)
+            objects.ships[1].shipSpeed = objects.ships[1].shipSpeed - (shipSpeedDt * dt * objects.ships[1].shipSpeedFactor)
         end
     end
 
-    if objects.ship.shipSpeed > maxSpeed then
-        objects.ship.shipSpeed = maxSpeed
-    end
-    if objects.ship.shipSpeed < -maxSpeed then
-        objects.ship.shipSpeed = -maxSpeed
+    for shipIndex, ship in ipairs(objects.ships) do
+        if ship.shipSpeed > maxSpeed then
+            ship.shipSpeed = maxSpeed
+        end
+        if ship.shipSpeed < -maxSpeed then
+            ship.shipSpeed = -maxSpeed
+        end
     end
 
-    objects.ship.body:setLinearVelocity(math.cos(objects.ship.body:getAngle()) * objects.ship.shipSpeed, 
-                                        math.sin(objects.ship.body:getAngle()) * objects.ship.shipSpeed)
+    for shipIndex, ship in ipairs(objects.ships) do
+        ship.body:setLinearVelocity(math.cos(ship.body:getAngle()) * ship.shipSpeed,
+                                    math.sin(ship.body:getAngle()) * ship.shipSpeed)
+    end
 
     -- psystem:update(dt)
-    if objects.ship.dead and not(objects.ship.deadAnimationDone) then
-        objects.ship.deadAnimationDone = true
-        deathPsystem:emit(1000)
+
+    for shipIndex, ship in ipairs(objects.ships) do
+        if ship.dead and not(ship.deadAnimationDone) then
+            ship.deadAnimationDone = true
+            deathPsystem:emit(1000)
+        end
     end
+    
     deathPsystem:update(dt)
 
     -- COLLISION DETECTION / Handling
@@ -238,18 +263,18 @@ function love.update(dt)
 end 
 
 function love.keypressed(key)
-    if objects.ship.dead then
+    if objects.ships[1].dead then
         return
     end
     
     if key == "space" then
         local newBullet = {}
         newBullet.body = love.physics.newBody(world, 
-                                objects.ship.body:getX() + math.cos(objects.ship.body:getAngle()) * shipRadius,
-                                objects.ship.body:getY() + math.sin(objects.ship.body:getAngle()) * shipRadius, 
+                                objects.ships[1].body:getX() + math.cos(objects.ships[1].body:getAngle()) * shipRadius,
+                                objects.ships[1].body:getY() + math.sin(objects.ships[1].body:getAngle()) * shipRadius, 
                                 "dynamic")
-        newBullet.body:setLinearVelocity(math.cos(objects.ship.body:getAngle()) * bulletSpeed, 
-                                         math.sin(objects.ship.body:getAngle()) * bulletSpeed)
+        newBullet.body:setLinearVelocity(math.cos(objects.ships[1].body:getAngle()) * bulletSpeed, 
+                                         math.sin(objects.ships[1].body:getAngle()) * bulletSpeed)
         newBullet.shape = love.physics.newCircleShape(5)
         newBullet.fixture = love.physics.newFixture(newBullet.body, newBullet.shape, 1)
         newBullet.fixture:setRestitution(0.1)
@@ -261,7 +286,7 @@ function love.keypressed(key)
         table.insert(objects.bullets, newBullet)
     end
     if key == 'q' then 
-        objects.ship.dead = true
+        objects.ships[1].dead = true
         deathPsystem:reset()
     end
 end
@@ -270,8 +295,10 @@ function love.draw()
     -- draw the ship
     --love.graphics.draw(shipSprite, shipX, shipY, shipAngle - math.pi/2, 0.75, 0.75, shipSprite:getWidth()/2, shipSprite:getHeight()/2)
 
-    if not(objects.ship.dead) then
-        love.graphics.draw(shipSprite, objects.ship.body:getX(), objects.ship.body:getY(), objects.ship.body:getAngle() - math.pi/2, 0.75, 0.75, shipSprite:getWidth()/2, shipSprite:getHeight()/2)
+    for shipIndex, ship in ipairs(objects.ships) do
+        if not(ship.dead) then
+            love.graphics.draw(shipSprite, ship.body:getX(), ship.body:getY(), ship.body:getAngle() - math.pi/2, 0.75, 0.75, shipSprite:getWidth()/2, shipSprite:getHeight()/2)
+        end
     end
 
     for bulletIndex, bullet in ipairs(objects.bullets) do
@@ -282,11 +309,11 @@ function love.draw()
     -- Debug
     love.graphics.setColor(1, 1, 1)
     love.graphics.print(table.concat({
-        'shipAngle: '..objects.ship.body:getAngle(),
-        'shipX: '..objects.ship.body:getX(),
-        'shipY: '..objects.ship.body:getY(),
-        'shipSpeed: '..objects.ship.shipSpeed,
-        'shipSpeedFactor: '..objects.ship.shipSpeedFactor,
+        'shipAngle: '..objects.ships[1].body:getAngle(),
+        'shipX: '..objects.ships[1].body:getX(),
+        'shipY: '..objects.ships[1].body:getY(),
+        'shipSpeed: '..objects.ships[1].shipSpeed,
+        'shipSpeedFactor: '..objects.ships[1].shipSpeedFactor,
         'collision: '..collisionText
     }, '\n'))
 
@@ -296,12 +323,17 @@ function love.draw()
         thrustCurrentTic = 0
     end
     local thrustCurrentFrame = math.floor(thrustCurrentTic / 5)
-    local thrustX = objects.ship.body:getX() - objects.ship.shape:getRadius() * math.cos(objects.ship.body:getAngle()) 
-    local thrustY = objects.ship.body:getY() - objects.ship.shape:getRadius() * math.sin(objects.ship.body:getAngle())
+    for shipIndex, ship in ipairs(objects.ships) do
+        local thrustX = ship.body:getX() - ship.shape:getRadius() * math.cos(ship.body:getAngle()) 
+        local thrustY = ship.body:getY() - ship.shape:getRadius() * math.sin(ship.body:getAngle())
+    
+        if ship.shipSpeed > 0 then
+            local thrustScale = (1 - ship.shipSpeedFactor) * 3
+            love.graphics.draw(thrustAnim[thrustCurrentFrame], thrustX, thrustY, ship.body:getAngle() + math.pi / 2, thrustScale, thrustScale, thrustWidth / 2, thrustHeight / 2)
+        end
 
-    if objects.ship.shipSpeed > 0 then
-        local thrustScale = (1 - objects.ship.shipSpeedFactor) * 3
-        love.graphics.draw(thrustAnim[thrustCurrentFrame], thrustX, thrustY, objects.ship.body:getAngle() + math.pi / 2, thrustScale, thrustScale, thrustWidth / 2, thrustHeight / 2)
+        -- If ship is dead, spend a few tics drawing particles
+        love.graphics.draw(deathPsystem, ship.body:getX(), ship.body:getY())
     end
     
     -- psystem:setDirection(shipAngle)
@@ -309,6 +341,5 @@ function love.draw()
     -- psystem:setPosition(-30 * math.cos(shipAngle), -30 * math.sin(shipAngle))
     -- love.graphics.draw(psystem, shipX, shipY)
     
-    -- If ship is dead, spend a few tics drawing particles
-    love.graphics.draw(deathPsystem, objects.ship.body:getX(), objects.ship.body:getY())
+    
 end
