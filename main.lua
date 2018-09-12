@@ -20,7 +20,7 @@ function love.load()
     local img = love.graphics.newImage('t1.png')
 
     -- Ship death explosion
-    deathPsystem = love.graphics.newParticleSystem(img, 200)
+    local deathPsystem = love.graphics.newParticleSystem(img, 200)
     deathPsystem:setParticleLifetime(1, 100)
     deathPsystem:setEmissionRate(0)
     deathPsystem:setSizeVariation(1)
@@ -60,6 +60,7 @@ function love.load()
     ship1.fixture:setRestitution(0.1) 
     ship1.fixture:setUserData(ship1)
     ship1.shipSpeed = 0
+    ship1.deathPsystem = deathPsystem:clone()
     table.insert(objects.ships, ship1)
 
     local ship2 = {}
@@ -71,6 +72,7 @@ function love.load()
     ship2.fixture:setRestitution(0.1)
     ship2.fixture:setUserData(ship2)
     ship2.shipSpeed = 0
+    ship2.deathPsystem = deathPsystem:clone()
     table.insert(objects.ships, ship2)
     
     objects.topWall = {}
@@ -163,7 +165,7 @@ function beginContact(a, b, coll)
     elseif (not (colShip == nil) and not (colBullet == nil)) then
         colShip.dead = true
         colBullet.dead = true
-        deathPsystem:reset()
+        colShip.deathPsystem:reset()
     end
     
 end
@@ -247,11 +249,13 @@ function love.update(dt)
     for shipIndex, ship in ipairs(objects.ships) do
         if ship.dead and not(ship.deadAnimationDone) then
             ship.deadAnimationDone = true
-            deathPsystem:emit(1000)
+            ship.deathPsystem:emit(1000)
         end
+
+        ship.deathPsystem:update(dt)
     end
     
-    deathPsystem:update(dt)
+    
 
     -- COLLISION DETECTION / Handling
     --------------------------------
@@ -287,7 +291,7 @@ function love.keypressed(key)
     end
     if key == 'q' then 
         objects.ships[1].dead = true
-        deathPsystem:reset()
+        objects.ships[1].deathPsystem:reset()
     end
 end
 
@@ -333,7 +337,9 @@ function love.draw()
         end
 
         -- If ship is dead, spend a few tics drawing particles
-        love.graphics.draw(deathPsystem, ship.body:getX(), ship.body:getY())
+        if (ship.dead) then
+            love.graphics.draw(ship.deathPsystem, ship.body:getX(), ship.body:getY())
+        end
     end
     
     -- psystem:setDirection(shipAngle)
