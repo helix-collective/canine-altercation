@@ -352,4 +352,24 @@ function love.draw()
             love.graphics.draw(ship.deathPsystem, ship.body:getX(), ship.body:getY())
         end
     end
+    
+    -- Game over text if a ship is dead
+    local numAliveShips = 0
+    local aliveShipIndex = -1
+    for shipIndex, ship in ipairs(objects.ships) do
+        if not(ship.dead) then 
+            numAliveShips = numAliveShips + 1
+            aliveShipIndex = shipIndex
+        end
+    end
+    
+    if numAliveShips == 1 then
+        local winMessage = 'Player '..aliveShipIndex..' wins!'
+        local prevFont = love.graphics.getFont()
+        local winFont = love.graphics.newFont(50)
+        love.graphics.setFont(winFont)
+        love.graphics.print(winMessage, arenaWidth / 2 - winFont:getWidth(winMessage) / 2, 
+                                        arenaHeight / 2 - winFont:getHeight() / 2)
+        love.graphics.setFont(prevFont)
+    end
 end
