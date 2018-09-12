@@ -362,9 +362,15 @@ function love.draw()
             aliveShipIndex = shipIndex
         end
     end
-    
+
+    local winMessage
     if numAliveShips == 1 then
-        local winMessage = 'Player '..aliveShipIndex..' wins!'
+        winMessage = 'Player '..aliveShipIndex..' wins!'
+    elseif numAliveShips == 0 then
+        winMessage = 'Nobody wins!'
+    end
+
+    if not(winMessage == nil) then
         local prevFont = love.graphics.getFont()
         local winFont = love.graphics.newFont(50)
         love.graphics.setFont(winFont)
