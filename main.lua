@@ -104,6 +104,8 @@ function love.load()
     objects.rightWall.fixture:setRestitution(0.2)
     objects.rightWall.fixture:setUserData(objects.rightWall)
     
+    objects.bullets = {} -- list of bullets
+
     -- change this to true to make ships reflect off walls
     shipsReflectOffWalls = false
     
@@ -200,12 +202,6 @@ function love.update(dt)
     objects.ship.body:setLinearVelocity(math.cos(objects.ship.body:getAngle()) * objects.ship.shipSpeed, 
                                         math.sin(objects.ship.body:getAngle()) * objects.ship.shipSpeed)
 
-    -- Update bullet positions
-    for _, bullet in ipairs(bullets) do
-        bullet.x = (bullet.x + math.cos(bullet.angle) * bulletSpeed * dt)
-        bullet.y = (bullet.y + math.sin(bullet.angle) * bulletSpeed * dt)
-    end
-
     -- psystem:update(dt)
     if dead then
         dead = false
@@ -224,11 +220,18 @@ end
 
 function love.keypressed(key)
     if key == "space" then
-         table.insert(bullets, {
-             x = objects.ship.body:getX() + math.cos(objects.ship.body:getAngle()) * shipRadius,
-             y = objects.ship.body:getY() + math.sin(objects.ship.body:getAngle()) * shipRadius,
-             angle = objects.ship.body:getAngle(),
-         })
+        local newBullet = {}
+        newBullet.body = love.physics.newBody(world, 
+                                objects.ship.body:getX() + math.cos(objects.ship.body:getAngle()) * shipRadius,
+                                objects.ship.body:getY() + math.sin(objects.ship.body:getAngle()) * shipRadius, 
+                                "dynamic")
+        newBullet.shape = love.physics.newCircleShape(5)
+        newBullet.fixture = love.physics.newFixture(newBullet.body, newBullet.shape, 1)
+        newBullet.fixture:setRestitution(0.1)
+        newBullet.fixture:setUserData(newBullet) 
+        newBullet.type = 'bullet'
+        
+        table.insert(objects.bullets, newBullet)
     end
     if key == 'q' then 
         dead = true
@@ -243,10 +246,9 @@ function love.draw()
     love.graphics.draw(shipSprite, objects.ship.body:getX(), objects.ship.body:getY(), objects.ship.body:getAngle() - math.pi/2, 0.75, 0.75, shipSprite:getWidth()/2, shipSprite:getHeight()/2)
     
 
-
-    for bulletIndex, bullet in ipairs(bullets) do
+    for bulletIndex, bullet in ipairs(objects.bullets) do
         love.graphics.setColor(0, 1, 0)
-        love.graphics.circle('fill', bullet.x, bullet.y, 5)
+        love.graphics.circle('fill', bullet.body:getX(), bullet.body:getY(), 5)
     end
 
     -- Debug
