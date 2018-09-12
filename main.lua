@@ -122,6 +122,19 @@ function love.load()
 
     -- change this to true to make ships reflect off walls
     shipsReflectOffWalls = false
+
+    effect = love.graphics.newShader[[
+    extern vec4 tint;
+    extern number strength;
+    vec4 effect(vec4 color, Image texture, vec2 tc, vec2 _) {
+      color = Texel(texture, tc);
+      number luma = dot(vec3(0.299f, 0.587f, 0.114f), color.rgb);
+      return mix(color, tint * luma, strength);
+    }]]
+    effect:send("tint", {
+        0.0, 1, 1, 1
+    })
+    effect:send("strength", 0.4)
     
 end
 
@@ -182,7 +195,6 @@ end
 
 function postSolve(a, b, coll, normalimpulse, tangentimpulse)
 end
-
 
 function love.update(dt)
     
@@ -285,7 +297,6 @@ function love.update(dt)
     -- Arena bounce
     -- TODO(jeeva): generalise once we add asteroids + other ships (should be a general for each thing, for each thing, calc bounce)
     -- TODO(jeeva): Make bounce smooth, to sleep to work out now :)
-    
 end
 
 function love.keypressed(key)
@@ -338,7 +349,11 @@ function love.draw()
 
     for shipIndex, ship in ipairs(objects.ships) do
         if not(ship.dead) then
+            if (shipIndex > 1) then
+                love.graphics.setShader(effect)
+            end
             love.graphics.draw(shipSprite, ship.body:getX(), ship.body:getY(), ship.body:getAngle() - math.pi/2, 0.75, 0.75, shipSprite:getWidth()/2, shipSprite:getHeight()/2)
+            love.graphics.setShader()
         end
     end
 
