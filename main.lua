@@ -38,10 +38,10 @@ function love.load()
     -- psystem:setSizes(0.03, 0.02)
     
     thrustAnim = {}
-    thrustAnim[1] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_002.png')
-    thrustAnim[2] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_003.png')
-    thrustAnim[3] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_004.png')
-    thrustAnim[4] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_005.png')
+    thrustAnim[1] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_001.png')
+    thrustAnim[2] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_002.png')
+    thrustAnim[3] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_003.png')
+    thrustAnim[4] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_004.png')
     thrustCurrentTic = 0
     thrustWidth = thrustAnim[1]:getWidth()
     thrustHeight = thrustAnim[1]:getHeight()
