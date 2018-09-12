@@ -38,13 +38,13 @@ function love.load()
     -- psystem:setSizes(0.03, 0.02)
     
     thrustAnim = {}
-    thrustAnim[0] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_002.png')
-    thrustAnim[1] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_003.png')
-    thrustAnim[2] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_004.png')
-    thrustAnim[3] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_005.png')
+    thrustAnim[1] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_002.png')
+    thrustAnim[2] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_003.png')
+    thrustAnim[3] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_004.png')
+    thrustAnim[4] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_005.png')
     thrustCurrentTic = 0
-    thrustWidth = thrustAnim[0]:getWidth()
-    thrustHeight = thrustAnim[0]:getHeight()
+    thrustWidth = thrustAnim[1]:getWidth()
+    thrustHeight = thrustAnim[1]:getHeight()
    
     love.physics.setMeter(64)
     world = love.physics.newWorld(0, 0, arenaWidth, arenaHeight)
@@ -378,7 +378,7 @@ function love.draw()
     if thrustCurrentTic > 15 then
         thrustCurrentTic = 0
     end
-    local thrustCurrentFrame = math.floor(thrustCurrentTic / 5)
+    local thrustCurrentFrame = math.floor(thrustCurrentTic / 5) + 1
     for shipIndex, ship in ipairs(objects.ships) do
         local thrustX = ship.body:getX() - ship.shape:getRadius() * math.cos(ship.body:getAngle()) 
         local thrustY = ship.body:getY() - ship.shape:getRadius() * math.sin(ship.body:getAngle())
