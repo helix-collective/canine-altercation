@@ -225,6 +225,8 @@ function love.keypressed(key)
                                 objects.ship.body:getX() + math.cos(objects.ship.body:getAngle()) * shipRadius,
                                 objects.ship.body:getY() + math.sin(objects.ship.body:getAngle()) * shipRadius, 
                                 "dynamic")
+        newBullet.body:setLinearVelocity(math.cos(objects.ship.body:getAngle()) * bulletSpeed, 
+                                         math.sin(objects.ship.body:getAngle()) * bulletSpeed)
         newBullet.shape = love.physics.newCircleShape(5)
         newBullet.fixture = love.physics.newFixture(newBullet.body, newBullet.shape, 1)
         newBullet.fixture:setRestitution(0.1)
