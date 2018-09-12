@@ -170,9 +170,11 @@ function beginContact(a, b, coll)
     elseif (not (colWall == nil) and not (colBullet == nil)) then
         colBullet.dead = true -- remove a bullet when it hits the wall in the next tic
     elseif (not (colShip == nil) and not (colBullet == nil)) then
-        colShip.dead = true
         colBullet.dead = true
-        colShip.deathPsystem:reset()
+        if not (colShip.dead) then
+            colShip.deathPsystem:reset()
+        end
+        colShip.dead = true
     end
     
 end
@@ -233,6 +235,13 @@ function love.update(dt)
         objects.ships[2].shipSpeed = objects.ships[2].shipSpeed + math.max(0, maxSpeed - objects.ships[2].shipSpeed) * dt
     elseif love.keyboard.isDown('s') then
         objects.ships[2].shipSpeed = objects.ships[2].shipSpeed + math.min(0, -maxSpeed - objects.ships[2].shipSpeed) * dt
+    end
+
+    -- If a ship is dead it can no longer move
+    for shipIndex, ship in ipairs(objects.ships) do
+        if ship.dead then
+            ship.shipSpeed = 0
+        end
     end
 
     for shipIndex, ship in ipairs(objects.ships) do
