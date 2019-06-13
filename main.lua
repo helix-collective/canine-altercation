@@ -1,19 +1,27 @@
+
 function love.load()
-    love.window.maximize()
-    
-    -- Game Constants
-    anglePerDt = 10
-    shipSpeedDt = 200
-    arenaWidth = love.graphics.getWidth()
-    arenaHeight = love.graphics.getHeight()
-    maxSpeed = 500
-    bulletSpeed = 700
-    shipRadius = 30
+  love.window.setMode(800, 600, {resizable=true, vsync=false})
+  love.window.maximize()
+  
+  -- Game Constants
+  anglePerDt = 5
+  shipSpeedDt = 200
+  arenaWidth = love.graphics.getWidth()
+  arenaHeight = love.graphics.getHeight()
+  maxSpeed = 500
+  bulletSpeed = 1000
+  shipRadius = 30
 
-    CATEGORY_BULLET = 9
-    SHIP_CATEGORY_BASE = 10
+  CATEGORY_BULLET = 9
+  SHIP_CATEGORY_BASE = 10
 
-    -- Game State
+
+  -- Game State
+  resetGameState()
+end
+
+function resetGameState()
+        -- Game State
     collisionText = ''
 
     local img = love.graphics.newImage('t1.png')
@@ -64,6 +72,7 @@ function love.load()
     ship1.fixture:setUserData(ship1)
     ship1.fixture:setCategory(SHIP_CATEGORY_BASE + 1)
     ship1.shipSpeed = 0
+    ship1.rate_limited = 0
     ship1.deathPsystem = deathPsystem:clone()
     ship1.sprite = love.graphics.newImage("/assets/PNG/Sprites/Ships/spaceShips_009.png")
     table.insert(objects.ships, ship1)
@@ -78,6 +87,7 @@ function love.load()
     ship2.fixture:setUserData(ship2)
     ship2.fixture:setCategory(SHIP_CATEGORY_BASE + 2)
     ship2.shipSpeed = 0
+    ship2.rate_limited = 0
     ship2.deathPsystem = deathPsystem:clone()
     ship2.sprite = love.graphics.newImage("/assets/PNG/Sprites/Ships/spaceShips_004.png")
     --ship2.shader = effect
@@ -124,9 +134,6 @@ function love.load()
     objects.rightWall.fixture:setUserData(objects.rightWall)
     
     objects.bullets = {} -- list of bullets
-
-    -- change this to true to make ships reflect off walls
-    shipsReflectOffWalls = false
 end
 
 
@@ -151,23 +158,14 @@ function beginContact(a, b, coll)
         colWall = b:getUserData()
     end
     if a:getUserData().type == 'bullet' then
-        colBullet = a:getUserData()
+        lBullet = a:getUserData()
     elseif b:getUserData().type == 'bullet' then
         colBullet = b:getUserData()
     end
 
     -- Seems like you can't update objects in callbacks (results in error)
     -- so just mark it and process next tic
-    if (not (colShip == nil) and not (colWall == nil)) then
-        colShip.bounceProgress = 1
-        colShip.bounceType = colWall.reflectType
-        if ((not shipsReflectOffWalls and colWall.reflectType == 'y') or 
-            (shipsReflectOffWalls and colWall.reflectType == 'x')) then
-           colShip.bounceAngle = (1 - (colShip.body:getAngle()/math.pi))*math.pi + math.pi
-        else
-            colShip.bounceAngle = (1 - (colShip.body:getAngle()/math.pi))*math.pi 
-        end
-    elseif (not (colWall == nil) and not (colBullet == nil)) then
+    if (not (colWall == nil) and not (colBullet == nil)) then
         colBullet.dead = true -- remove a bullet when it hits the wall in the next tic
     elseif (not (colShip == nil) and not (colBullet == nil)) then
         colBullet.dead = true
@@ -193,17 +191,6 @@ function love.update(dt)
     
     world:update(dt)
 
-    -- process any pending bounces
-    for shipIndex, ship in ipairs(objects.ships) do
-        if (ship.bounceProgress == 1) then
-            ship.body:setAngle(ship.bounceAngle)
-            if not shipsReflectOffWalls then 
-                ship.shipSpeed = -ship.shipSpeed
-            end
-            ship.bounceProgress = 0
-        end
-    end
-    
     -- remove any bullets that have hit a wall
     for bulletIndex, bullet in ipairs(objects.bullets) do
         if (bullet.dead) then
@@ -242,6 +229,7 @@ function love.update(dt)
         if ship.dead then
             ship.shipSpeed = 0
         end
+        ship.rate_limited = ship.rate_limited - 1
     end
 
     for shipIndex, ship in ipairs(objects.ships) do
@@ -257,19 +245,10 @@ function love.update(dt)
 
         ship.deathPsystem:update(dt)
     end
-    
-    
-
-    -- COLLISION DETECTION / Handling
-    --------------------------------
-    
-    -- Arena bounce
-    -- TODO(jeeva): generalise once we add asteroids + other ships (should be a general for each thing, for each thing, calc bounce)
-    -- TODO(jeeva): Make bounce smooth, to sleep to work out now :)
 end
 
 function love.keypressed(key)
-    if not(objects.ships[1].dead) and key == "space" then
+    if objects.ships[1].rate_limited < 0 and not(objects.ships[1].dead) and key == "space" then
         local newBullet = {}
         newBullet.body = love.physics.newBody(world, 
                                 objects.ships[1].body:getX() + math.cos(objects.ships[1].body:getAngle()) * shipRadius,
@@ -286,8 +265,9 @@ function love.keypressed(key)
         newBullet.type = 'bullet'
         
         table.insert(objects.bullets, newBullet)
+        objects.ships[1].rate_limited = 1000
     end
-    if not(objects.ships[2].dead) and key == "tab" then
+    if objects.ships[1].rate_limited < 0 and not(objects.ships[2].dead) and key == "tab" then
         local newBullet = {}
         newBullet.body = love.physics.newBody(world,
             objects.ships[2].body:getX() + math.cos(objects.ships[2].body:getAngle()) * shipRadius,
@@ -304,11 +284,11 @@ function love.keypressed(key)
         newBullet.type = 'bullet'
 
         table.insert(objects.bullets, newBullet)
+        objects.ships[1].rate_limited = 1000
     end
 
-    if key == 'q' then 
-        objects.ships[1].dead = true
-        objects.ships[1].deathPsystem:reset()
+    if key == 'r' then 
+      resetGameState()
     end
 end
 
