@@ -12,3 +12,13 @@ An arena style mmo dogfight. Started life as a side project on Helix's Perisher 
  - Needs client side prediction, reconciliation and interpolation to be smooth
  - see: https://www.gabrielgambetta.com/lag-compensation.html
  - see: https://www.gabrielgambetta.com/client-side-prediction-live-demo.html
+
+# Dev
+
+    sudo apt-get build-dep love
+    sudo apt-get install mercurial
+    hg clone ssh://hg@bitbucket.org/rude/love
+    cd love; mkdir build; cd built; cmake -DCMAKE_BUILD_TYPE=Release ..
+
+    cd ${gamedir}
+    ${lovebuilddir}/love .
