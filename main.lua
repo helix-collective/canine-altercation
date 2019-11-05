@@ -146,9 +146,9 @@ function postSolve(a, b, coll, normalimpulse, tangentimpulse)
 end
 
 function love.update(dt)
-    camera:setPosition(objects.ships[1].body:getX() - (arenaWidth / 2), objects.ships[1].body:getY() - (arenaHeight / 2))
     
     world:update(dt)
+    camera:setPosition(objects.ships[1].body:getX() - (arenaWidth / 2), objects.ships[1].body:getY() - (arenaHeight / 2))
 
     -- remove any bullets that have hit a wall
     for bulletIndex, bullet in ipairs(objects.bullets) do
@@ -183,6 +183,16 @@ function love.update(dt)
     for shipIndex, ship in ipairs(objects.ships) do
         ship.body:setLinearVelocity(math.cos(ship.body:getAngle()) * ship.shipSpeed,
                                     math.sin(ship.body:getAngle()) * ship.shipSpeed)
+        if ship.body:getX() < 0 then
+            ship.body:setX(arenaWidth)
+        elseif ship.body:getX() > arenaWidth then
+            ship.body:setX(0)
+        end
+        if ship.body:getY() < 0 then
+            ship.body:setY(arenaHeight)
+        elseif ship.body:getY() > arenaHeight then
+            ship.body:setY(0)
+        end
     end
 
     for shipIndex, ship in ipairs(objects.ships) do
