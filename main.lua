@@ -303,6 +303,7 @@ function love.draw()
             end
 
             if not(winMessage == nil) then
+                love.graphics.setColor(1, 1, 1)
                 local prevFont = love.graphics.getFont()
                 local winFont = love.graphics.newFont(50)
                 love.graphics.setFont(winFont)
