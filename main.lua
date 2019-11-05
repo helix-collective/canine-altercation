@@ -11,86 +11,67 @@ function love.load()
   bulletSpeed = 1000
   shipRadius = 30
 
-  CATEGORY_BULLET = 9
-  SHIP_CATEGORY_BASE = 10
+  RELOAD_DELAY = 2 -- seconds
 
+  CATEGORY_BULLET = 9
+  NEXT_SHIP_CATEGORY = 10
 
   -- Game State
   resetGameState()
 end
 
-function resetGameState()
-        -- Game State
-    collisionText = ''
+function newShip(ship_sprite)
+    -- Ship death explosion
 
-    local img = love.graphics.newImage('t1.png')
+    local ship = {}
+    ship.type = 'ship'
+    -- place the body somewhere in the arena
+    ship.body = love.physics.newBody(world, love.math.random(math.floor(shipRadius), math.floor(arenaWidth - shipRadius)), love.math.random(math.floor(shipRadius), math.floor(arenaHeight - shipRadius)), "dynamic") 
+    ship.body:setAngularDamping(1000)  --for colissions
+    ship.shape = love.physics.newCircleShape(shipRadius)
+    ship.fixture = love.physics.newFixture(ship.body, ship.shape, 1) -- Attach fixture to body and give it a density of 1.
+    ship.fixture:setRestitution(0.1)  -- how objects bounce of each other. https://www.scienceabc.com/pure-sciences/coefficient-of-restitution-definition-explanation-and-formula.html
+    ship.fixture:setUserData(ship)
+    ship.fixture:setCategory(NEXT_SHIP_CATEGORY)
+    NEXT_SHIP_CATEGORY = NEXT_SHIP_CATEGORY + 1
+    ship.shipSpeed = 0
+    ship.reload_delay = 0
 
     -- Ship death explosion
-    local deathPsystem = love.graphics.newParticleSystem(img, 200)
-    deathPsystem:setParticleLifetime(1, 100)
-    deathPsystem:setEmissionRate(0)
-    deathPsystem:setSizeVariation(1)
-    deathPsystem:setSizes(0.1, 0.07, 0.05)
-    deathPsystem:setLinearAcceleration(-200, -200, 200, 200)
+    local img = love.graphics.newImage('t1.png')
+    ship.deathPsystem = love.graphics.newParticleSystem(img, 200)
+    ship.deathPsystem:setParticleLifetime(1, 100)
+    ship.deathPsystem:setEmissionRate(0)
+    ship.deathPsystem:setSizeVariation(1)
+    ship.deathPsystem:setSizes(0.1, 0.07, 0.05)
+    ship.deathPsystem:setLinearAcceleration(-200, -200, 200, 200)
 
+    ship.sprite = love.graphics.newImage(ship_sprite)
+    return ship
+end
+
+function resetGameState()
+    -- Game State
+    collisionText = ''
+
+    -- Thruster
     thrustAnim = {}
     thrustAnim[1] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_001.png')
     thrustAnim[2] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_002.png')
     thrustAnim[3] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_003.png')
     thrustAnim[4] = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_004.png')
-    thrustCurrentTic = 0
     thrustWidth = thrustAnim[1]:getWidth()
     thrustHeight = thrustAnim[1]:getHeight()
 
-    effect = love.graphics.newShader[[
-    extern vec4 tint;
-    extern number strength;
-    vec4 effect(vec4 color, Image texture, vec2 tc, vec2 _) {
-      color = Texel(texture, tc);
-      number luma = dot(vec3(0.299f, 0.587f, 0.114f), color.rgb);
-      return mix(color, tint * luma, strength);
-    }]]
-    effect:send("tint", {
-        0.0, 1, 1, 1
-    })
-    effect:send("strength", 0.4)
-
     love.physics.setMeter(64)
+    thrustCurrentTic = 0
     world = love.physics.newWorld(0, 0, arenaWidth, arenaHeight)
     world:setCallbacks(beginContact, endContact, preSolve, postSolve)
 
     objects = {} -- table to hold all our physical objects
     objects.ships = {}
-    local ship1 = {}
-    ship1.type = 'ship'
-    ship1.body = love.physics.newBody(world, arenaWidth / 4, arenaHeight / 4, "dynamic") --place the body in the center of the world and make it dynamic, so it can move around
-    ship1.body:setAngularDamping(1000)  --for colissions
-    ship1.shape = love.physics.newCircleShape(shipRadius)
-    ship1.fixture = love.physics.newFixture(ship1.body, ship1.shape, 1) -- Attach fixture to body and give it a density of 1.
-    ship1.fixture:setRestitution(0.1) 
-    ship1.fixture:setUserData(ship1)
-    ship1.fixture:setCategory(SHIP_CATEGORY_BASE + 1)
-    ship1.shipSpeed = 0
-    ship1.rate_limited = 0
-    ship1.deathPsystem = deathPsystem:clone()
-    ship1.sprite = love.graphics.newImage("/assets/PNG/Sprites/Ships/spaceShips_009.png")
-    table.insert(objects.ships, ship1)
-
-    local ship2 = {}
-    ship2.type = 'ship'
-    ship2.body = love.physics.newBody(world, arenaWidth / 4 * 3, arenaHeight / 4 * 3, "dynamic") --place the body in the center of the world and make it dynamic, so it can move around
-    ship2.body:setAngularDamping(1000)  --for colissions
-    ship2.shape = love.physics.newCircleShape(shipRadius)
-    ship2.fixture = love.physics.newFixture(ship2.body, ship2.shape, 1) -- Attach fixture to body and give it a density of 1.
-    ship2.fixture:setRestitution(0.1)
-    ship2.fixture:setUserData(ship2)
-    ship2.fixture:setCategory(SHIP_CATEGORY_BASE + 2)
-    ship2.shipSpeed = 0
-    ship2.rate_limited = 0
-    ship2.deathPsystem = deathPsystem:clone()
-    ship2.sprite = love.graphics.newImage("/assets/PNG/Sprites/Ships/spaceShips_004.png")
-    --ship2.shader = effect
-    table.insert(objects.ships, ship2)
+    table.insert(objects.ships, newShip("/assets/PNG/Sprites/Ships/spaceShips_009.png"))
+    table.insert(objects.ships, newShip("/assets/PNG/Sprites/Ships/spaceShips_004.png"))
     
     objects.topWall = {}
     objects.topWall.type = 'wall'
@@ -134,8 +115,6 @@ function resetGameState()
     
     objects.bullets = {} -- list of bullets
 end
-
-
 
 function beginContact(a, b, coll)
 
@@ -209,7 +188,6 @@ function love.update(dt)
         objects.ships[2].body:setAngle(objects.ships[2].body:getAngle() - anglePerDt * dt)
     end
     
-
     -- Accelerate ships
     if love.keyboard.isDown('up') then
         objects.ships[1].shipSpeed = objects.ships[1].shipSpeed + math.max(0, maxSpeed - objects.ships[1].shipSpeed) * dt
@@ -228,7 +206,7 @@ function love.update(dt)
         if ship.dead then
             ship.shipSpeed = 0
         end
-        ship.rate_limited = ship.rate_limited - 1
+        ship.reload_delay = ship.reload_delay - dt
     end
 
     for shipIndex, ship in ipairs(objects.ships) do
@@ -247,7 +225,7 @@ function love.update(dt)
 end
 
 function love.keypressed(key)
-    if objects.ships[1].rate_limited < 0 and not(objects.ships[1].dead) and key == "space" then
+    if objects.ships[1].reload_delay < 0 and not(objects.ships[1].dead) and key == "space" then
         local newBullet = {}
         newBullet.body = love.physics.newBody(world, 
                                 objects.ships[1].body:getX() + math.cos(objects.ships[1].body:getAngle()) * shipRadius,
@@ -258,15 +236,15 @@ function love.keypressed(key)
         newBullet.shape = love.physics.newCircleShape(5)
         newBullet.fixture = love.physics.newFixture(newBullet.body, newBullet.shape, 1)
         newBullet.fixture:setRestitution(0.1)
-        newBullet.fixture:setCategory(CATEGORY_BULLET, SHIP_CATEGORY_BASE + 1)
-        newBullet.fixture:setMask(CATEGORY_BULLET, SHIP_CATEGORY_BASE + 1)
+        newBullet.fixture:setCategory(CATEGORY_BULLET, objects.ships[1].fixture:getCategory())
+        newBullet.fixture:setMask(CATEGORY_BULLET, objects.ships[1].fixture:getCategory())
         newBullet.fixture:setUserData(newBullet) 
         newBullet.type = 'bullet'
         
         table.insert(objects.bullets, newBullet)
-        objects.ships[1].rate_limited = 1000
+        objects.ships[1].reload_delay = RELOAD_DELAY
     end
-    if objects.ships[1].rate_limited < 0 and not(objects.ships[2].dead) and key == "tab" then
+    if objects.ships[2].reload_delay < 0 and not(objects.ships[2].dead) and key == "tab" then
         local newBullet = {}
         newBullet.body = love.physics.newBody(world,
             objects.ships[2].body:getX() + math.cos(objects.ships[2].body:getAngle()) * shipRadius,
@@ -277,13 +255,13 @@ function love.keypressed(key)
         newBullet.shape = love.physics.newCircleShape(5)
         newBullet.fixture = love.physics.newFixture(newBullet.body, newBullet.shape, 1)
         newBullet.fixture:setRestitution(0.1)
-        newBullet.fixture:setCategory(CATEGORY_BULLET, SHIP_CATEGORY_BASE + 2)
-        newBullet.fixture:setMask(CATEGORY_BULLET, SHIP_CATEGORY_BASE + 2)
+        newBullet.fixture:setCategory(CATEGORY_BULLET, objects.ships[2].fixture:getCategory())
+        newBullet.fixture:setMask(CATEGORY_BULLET, objects.ships[2].fixture:getCategory())
         newBullet.fixture:setUserData(newBullet)
         newBullet.type = 'bullet'
 
         table.insert(objects.bullets, newBullet)
-        objects.ships[1].rate_limited = 1000
+        objects.ships[2].reload_delay = RELOAD_DELAY
     end
 
     if key == 'r' then 
@@ -312,6 +290,7 @@ function love.draw()
         'shipAngle: '..objects.ships[1].body:getAngle(),
         'shipX: '..objects.ships[1].body:getX(),
         'shipY: '..objects.ships[1].body:getY(),
+        'reloadDelay: '..objects.ships[1].reload_delay,
         'shipSpeed: '..objects.ships[1].shipSpeed,
         'collision: '..collisionText
     }, '\n'))
