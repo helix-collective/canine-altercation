@@ -1,0 +1,19 @@
+#!/bin/bash
+# Run the adl compiler using the published docker container
+
+# exec /home/timd/helix/repos/helix-adl-tools/haskell/.stack-work/install/x86_64-linux/dfb901abbefdbb17c3b94d2e00bcc485dcaa9fa58bf4f6d7a172996e9b3dc626/8.6.5/bin/adlc "@"
+
+IMAGE=hxadl
+VERSION=latest
+
+ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null && pwd )"
+docker run \
+  --interactive \
+  --rm \
+  --volume $ROOT:$ROOT \
+  --volume /etc/passwd:/etc/passwd \
+  --volume /etc/group:/etc/group \
+  --user $(id -u):$(id -g) \
+  --workdir $(pwd) \
+  $IMAGE:$VERSION \
+  adlc "$@"

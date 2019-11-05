@@ -1,0 +1,86 @@
+module canine.api {
+
+import sys.types.Map;
+import common.http.HttpPost;
+
+// New style ADL API
+struct Api {
+  /// Send player actions for the specified timestamp
+  HttpPost<WithTimeStamp<PlayerActions>,EmptyObject> actions = {
+    "path" : "/player-actions",
+    "roles" : ["player"]
+  };
+
+  /// Responds with a new state once time
+  /// has advanced beyond the given timestamp
+  /// (long poll)
+  HttpPost<TimeStamp,WithTimeStamp<Model>> state = {
+    "path" : "/state",
+    "roles" : ["player"]
+  }; 
+};
+  
+
+struct EmptyObject {};
+
+struct Vector2 {
+  Double x;
+  Double y;
+};
+
+newtype Duration = Double;
+newtype Angle = Double;
+
+newtype Velocity = Vector2;
+newtype Position = Vector2;
+
+newtype TimeStamp = Word32;
+
+newtype ShipId = String;
+newtype MissileId = String;
+
+struct PosVel {
+  @SerializedName "p"
+  Position position;
+
+  @SerializedName "v"
+  Velocity velocity;
+};
+
+struct Ship {
+  PosVel pv;
+  Word8 remainingLives;
+};
+
+struct Missile {
+  PosVel pv;
+  Duration remainingLife;
+  
+};
+
+struct Model {
+  Map<ShipId, Ship> ships;
+  Map<MissileId, Missile> missiles;
+};
+
+union PlayerAction {
+  Duration thrust;
+  Void fire;
+  Angle rotateLeft;
+  Angle rotateRight;
+};
+
+struct PlayerActions {
+  ShipId id;
+  Vector<PlayerAction> actions;
+};
+
+
+struct WithTimeStamp<T> {
+  TimeStamp t;
+  T value; 
+};
+
+
+
+};
