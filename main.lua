@@ -1,7 +1,6 @@
 
 function love.load()
-  love.window.setMode(800, 600, {resizable=true, vsync=false})
-  love.window.maximize()
+  love.window.setMode(0, 0, {fullscreen=true, resizable=true, vsync=false})
   
   -- Game Constants
   anglePerDt = 5
