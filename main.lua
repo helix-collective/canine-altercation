@@ -161,13 +161,27 @@ end
 function postSolve(a, b, coll, normalimpulse, tangentimpulse)
 end
 
+function updateWorldObject(object)
+    if object.body:getX() < 0 then
+        object.body:setX(arenaWidth)
+    elseif object.body:getX() > arenaWidth then
+        object.body:setX(0)
+    end
+    if object.body:getY() < 0 then
+        object.body:setY(arenaHeight)
+    elseif object.body:getY() > arenaHeight then
+        object.body:setY(0)
+    end
+end
+
 function love.update(dt)
-    camera:setPosition(objects.ships[1].body:getX() - (arenaWidth / 2), objects.ships[1].body:getY() - (arenaHeight / 2))
     
     world:update(dt)
+    camera:setPosition(objects.ships[1].body:getX() - (arenaWidth / 2), objects.ships[1].body:getY() - (arenaHeight / 2))
 
     -- remove any bullets that have hit a wall
     for bulletIndex, bullet in ipairs(objects.bullets) do
+        updateWorldObject(bullet)
         if (bullet.dead) then
             table.remove(objects.bullets, bulletIndex)
         end
@@ -209,6 +223,7 @@ function love.update(dt)
     for shipIndex, ship in ipairs(objects.ships) do
         ship.body:setLinearVelocity(math.cos(ship.body:getAngle()) * ship.shipSpeed,
                                     math.sin(ship.body:getAngle()) * ship.shipSpeed)
+        updateWorldObject(ship)
     end
 
     for shipIndex, ship in ipairs(objects.ships) do
@@ -266,33 +281,37 @@ function love.keypressed(key)
     end
 end
 
-function love.draw()
-    -- Debug
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.print(table.concat({
-        'shipAngle: '..objects.ships[1].body:getAngle(),
-        'shipX: '..objects.ships[1].body:getX(),
-        'shipY: '..objects.ships[1].body:getY(),
-        'reloadDelay: '..objects.ships[1].reload_delay,
-        'shipSpeed: '..objects.ships[1].shipSpeed,
-        'collision: '..collisionText
-    }, '\n'))
+-- Low level sprite duplication helper
+function drawInWorld(drawable, x, y, r, sx, sy, ox, oy)
+    for i=-1,1 do
+        for j=-1,1 do
+            love.graphics.draw(drawable, x + i * arenaWidth, y + j * arenaHeight, r, sx, sy, ox, oy)
+        end
+    end
+end
 
-    camera:set()
-    love.graphics.draw(thisImage,thisQuad,0,0)
-    -- draw the ship
+function drawShips()
     for shipIndex, ship in ipairs(objects.ships) do
         if not(ship.dead) then
             love.graphics.setShader(ship.shader)
-            love.graphics.draw(ship.sprite, ship.body:getX(), ship.body:getY(), ship.body:getAngle() - math.pi/2, 0.75, 0.75, ship.sprite:getWidth()/2, ship.sprite:getHeight()/2)
+            drawInWorld(ship.sprite, ship.body:getX(), ship.body:getY(), ship.body:getAngle() - math.pi/2, 0.75, 0.75, ship.sprite:getWidth()/2, ship.sprite:getHeight()/2)
             love.graphics.setShader()
         end
     end
+end
 
+function drawBullets()
     for bulletIndex, bullet in ipairs(objects.bullets) do
         love.graphics.setColor(0, 1, 0)
         love.graphics.circle('fill', bullet.body:getX(), bullet.body:getY(), 5)
     end
+end
+
+-- Draw in game objects, to be duplicated for wraparound
+function drawWorld()
+    -- draw the ship
+    drawShips()
+    drawBullets()
 
     -- Thruster
     thrustCurrentTic = thrustCurrentTic + 1
@@ -340,5 +359,23 @@ function love.draw()
                                         arenaHeight / 2 - winFont:getHeight() / 2)
         love.graphics.setFont(prevFont)
     end
+end
+
+
+function love.draw()
+    -- Debug
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.print(table.concat({
+        'shipAngle: '..objects.ships[1].body:getAngle(),
+        'shipX: '..objects.ships[1].body:getX(),
+        'shipY: '..objects.ships[1].body:getY(),
+        'reloadDelay: '..objects.ships[1].reload_delay,
+        'shipSpeed: '..objects.ships[1].shipSpeed,
+        'collision: '..collisionText
+    }, '\n'))
+
+    camera:set()
+    love.graphics.draw(thisImage,thisQuad,0,0)
+    drawWorld()
     camera:unset()
 end
