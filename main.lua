@@ -1,4 +1,6 @@
 
+require "camera"
+
 function love.load()
   love.window.setMode(0, 0, {fullscreen=true, resizable=true, vsync=false})
   
@@ -160,6 +162,7 @@ function postSolve(a, b, coll, normalimpulse, tangentimpulse)
 end
 
 function love.update(dt)
+    camera:setPosition(objects.ships[1].body:getX() - (arenaWidth / 2), objects.ships[1].body:getY() - (arenaHeight / 2))
     
     world:update(dt)
 
@@ -264,6 +267,8 @@ function love.keypressed(key)
 end
 
 function love.draw()
+    camera:set()
+    love.graphics.draw(thisImage,thisQuad,0,0)
     -- draw the ship
     for shipIndex, ship in ipairs(objects.ships) do
         if not(ship.dead) then
@@ -335,6 +340,5 @@ function love.draw()
                                         arenaHeight / 2 - winFont:getHeight() / 2)
         love.graphics.setFont(prevFont)
     end
-
-    love.graphics.draw(thisImage,thisQuad,0,0)
+    camera:unset()
 end
