@@ -97,11 +97,11 @@ function resetGameState()
     table.insert(objects.ships, newShip("/assets/PNG/Sprites/Ships/spaceShips_009.png"))
     table.insert(objects.ships, newShip("/assets/PNG/Sprites/Ships/spaceShips_004.png"))
     
-    objects.borders = {}
-    objects.borders.top = newBorderWall('top')
-    objects.borders.bottom = newBorderWall('bottom')
-    objects.borders.left = newBorderWall('left')
-    objects.borders.right = newBorderWall('right')
+    -- objects.borders = {}
+    -- objects.borders.top = newBorderWall('top')
+    -- objects.borders.bottom = newBorderWall('bottom')
+    -- objects.borders.left = newBorderWall('left')
+    -- objects.borders.right = newBorderWall('right')
 
     objects.bullets = {} -- list of bullets
 end
