@@ -76,6 +76,18 @@ function resetGameState()
     ship1.sprite = love.graphics.newImage("/assets/PNG/Sprites/Ships/spaceShips_009.png")
     table.insert(objects.ships, ship1)
 
+    -- for bulletIndex, bullet in ipairs(objects.bullets) do
+    --     if (bullet.dead) then
+    --         table.remove(objects.bullets, bulletIndex)
+    --     end
+    -- end
+
+    local planet = {}
+    objects.planets = {}
+    planet.body = love.physics.newBody(world, arenaWidth / 2, arenaHeight / 2, "static") --place the body in the center of the world and make it dynamic, so it can move around
+    planet.sprite = love.graphics.newImage("/assets/PNG/Sprites/Meteors/spaceMeteors_001.png")
+    table.insert(objects.planets, planet)
+
     objects.bullets = {} -- list of bullets
 end
 
@@ -249,6 +261,10 @@ function love.draw()
         if (ship.dead) then
             love.graphics.draw(ship.deathPsystem, ship.body:getX(), ship.body:getY())
         end
+    end
+
+    for planetIndex, planet in ipairs(objects.planets) do
+        love.graphics.draw(planet.sprite, planet.body:getX(), planet.body:getY(), planet.body:getAngle() - math.pi/2, 0.75, 0.75, planet.sprite:getWidth()/2, planet.sprite:getHeight()/2)
     end
     
     -- Game over text if a ship is dead
