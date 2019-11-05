@@ -243,70 +243,74 @@ function love.draw()
     }, '\n'))
 
     camera:set()
-    love.graphics.draw(thisImage,thisQuad,0,0)
-    for planetIndex, planet in ipairs(objects.planets) do
-        love.graphics.draw(planet.sprite, planet.body:getX(), planet.body:getY(), planet.body:getAngle() - math.pi/2, 0.75, 0.75, planet.sprite:getWidth()/2, planet.sprite:getHeight()/2)
-    end
-    -- draw the ship
-    for shipIndex, ship in ipairs(objects.ships) do
-        if not(ship.dead) then
-            love.graphics.setShader(ship.shader)
-            love.graphics.draw(ship.sprite, ship.body:getX(), ship.body:getY(), ship.body:getAngle() - math.pi/2, 0.75, 0.75, ship.sprite:getWidth()/2, ship.sprite:getHeight()/2)
-            love.graphics.setShader()
+    for i=-1,1 do
+        for j=-1,1 do
+            love.graphics.draw(thisImage,thisQuad,0,0)
+            for planetIndex, planet in ipairs(objects.planets) do
+                love.graphics.draw(planet.sprite, planet.body:getX() + j * arenaWidth, planet.body:getY() + i * arenaHeight, planet.body:getAngle() - math.pi/2, 0.75, 0.75, planet.sprite:getWidth()/2, planet.sprite:getHeight()/2)
+            end
+            -- draw the ship
+            for shipIndex, ship in ipairs(objects.ships) do
+                if not(ship.dead) then
+                    love.graphics.setShader(ship.shader)
+                    love.graphics.draw(ship.sprite, ship.body:getX() + j * arenaWidth, ship.body:getY() + i * arenaHeight, ship.body:getAngle() - math.pi/2, 0.75, 0.75, ship.sprite:getWidth()/2, ship.sprite:getHeight()/2)
+                    love.graphics.setShader()
+                end
+            end
+
+            for bulletIndex, bullet in ipairs(objects.bullets) do
+                love.graphics.setColor(0, 1, 0)
+                love.graphics.circle('fill', bullet.body:getX() + j * arenaWidth, bullet.body:getY() + i * arenaHeight, 5)
+            end
+
+
+            -- Thruster
+            thrustCurrentTic = thrustCurrentTic + 1
+            if thrustCurrentTic > 15 then
+                thrustCurrentTic = 0
+            end
+            local thrustCurrentFrame = math.floor(thrustCurrentTic / 5) + 1
+            for shipIndex, ship in ipairs(objects.ships) do
+                local thrustX = ship.body:getX() - ship.shape:getRadius() * math.cos(ship.body:getAngle()) + j * arenaWidth
+                local thrustY = ship.body:getY() - ship.shape:getRadius() * math.sin(ship.body:getAngle()) + i * arenaHeight
+            
+                if ship.shipSpeed > 0 and not(ship.dead) then
+                    local thrustScale = ship.shipSpeed / maxSpeed * 3
+                    love.graphics.draw(thrustAnim[thrustCurrentFrame], thrustX, thrustY, ship.body:getAngle() + math.pi / 2, thrustScale, thrustScale, thrustWidth / 2, thrustHeight / 2)
+                end
+
+                -- If ship is dead, spend a few tics drawing particles
+                if (ship.dead) then
+                    love.graphics.draw(ship.deathPsystem, ship.body:getX(), ship.body:getY())
+                end
+            end
+            
+            -- Game over text if a ship is dead
+            local numAliveShips = 0
+            local aliveShipIndex = -1
+            for shipIndex, ship in ipairs(objects.ships) do
+                if not(ship.dead) then 
+                    numAliveShips = numAliveShips + 1
+                    aliveShipIndex = shipIndex
+                end
+            end
+
+            local winMessage
+            if numAliveShips == 1 then
+                winMessage = 'Player '..aliveShipIndex..' wins!'
+            elseif numAliveShips == 0 then
+                winMessage = 'Nobody wins!'
+            end
+
+            if not(winMessage == nil) then
+                local prevFont = love.graphics.getFont()
+                local winFont = love.graphics.newFont(50)
+                love.graphics.setFont(winFont)
+                love.graphics.print(winMessage, arenaWidth / 2 - winFont:getWidth(winMessage) / 2, 
+                                                arenaHeight / 2 - winFont:getHeight() / 2)
+                love.graphics.setFont(prevFont)
+            end
         end
-    end
-
-    for bulletIndex, bullet in ipairs(objects.bullets) do
-        love.graphics.setColor(0, 1, 0)
-        love.graphics.circle('fill', bullet.body:getX(), bullet.body:getY(), 5)
-    end
-
-
-    -- Thruster
-    thrustCurrentTic = thrustCurrentTic + 1
-    if thrustCurrentTic > 15 then
-        thrustCurrentTic = 0
-    end
-    local thrustCurrentFrame = math.floor(thrustCurrentTic / 5) + 1
-    for shipIndex, ship in ipairs(objects.ships) do
-        local thrustX = ship.body:getX() - ship.shape:getRadius() * math.cos(ship.body:getAngle()) 
-        local thrustY = ship.body:getY() - ship.shape:getRadius() * math.sin(ship.body:getAngle())
-    
-        if ship.shipSpeed > 0 and not(ship.dead) then
-            local thrustScale = ship.shipSpeed / maxSpeed * 3
-            love.graphics.draw(thrustAnim[thrustCurrentFrame], thrustX, thrustY, ship.body:getAngle() + math.pi / 2, thrustScale, thrustScale, thrustWidth / 2, thrustHeight / 2)
-        end
-
-        -- If ship is dead, spend a few tics drawing particles
-        if (ship.dead) then
-            love.graphics.draw(ship.deathPsystem, ship.body:getX(), ship.body:getY())
-        end
-    end
-    
-    -- Game over text if a ship is dead
-    local numAliveShips = 0
-    local aliveShipIndex = -1
-    for shipIndex, ship in ipairs(objects.ships) do
-        if not(ship.dead) then 
-            numAliveShips = numAliveShips + 1
-            aliveShipIndex = shipIndex
-        end
-    end
-
-    local winMessage
-    if numAliveShips == 1 then
-        winMessage = 'Player '..aliveShipIndex..' wins!'
-    elseif numAliveShips == 0 then
-        winMessage = 'Nobody wins!'
-    end
-
-    if not(winMessage == nil) then
-        local prevFont = love.graphics.getFont()
-        local winFont = love.graphics.newFont(50)
-        love.graphics.setFont(winFont)
-        love.graphics.print(winMessage, arenaWidth / 2 - winFont:getWidth(winMessage) / 2, 
-                                        arenaHeight / 2 - winFont:getHeight() / 2)
-        love.graphics.setFont(prevFont)
     end
     camera:unset()
 end
