@@ -1,6 +1,9 @@
 local socket = require "socket"
 local udp = socket.udp()
 
+local enet = require "enet"
+local host = enet.host_create("localhost:6789")
+
 udp:settimeout(1)
 udp:setsockname('*', 12345)
 local running = true
