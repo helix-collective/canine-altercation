@@ -1,24 +1,23 @@
-local socket = require "socket"
-local udp = socket.udp()
 
-local enet = require "enet"
-local host = enet.host_create("localhost:6789")
+print("server starting")
 
-udp:settimeout(1)
-udp:setsockname('*', 12345)
-local running = true
+-- From https://leafo.net/lua-enet/#tutorial
+-- server.lua
+require "enet"
+local host = enet.host_create("*:12345")
 
-print "Beginning server loop."
-while running do
-  data, msg_or_ip, port_or_nil = udp:receivefrom()
-  print("data:", data)
-  --print("msg_or_ip:", msg_or_ip)
-  --print("port_or_nil:", port_or_nil)
+print("host created")
 
-  if (msg_or_ip and port_or_nil) then
-    udp:sendto("foooo!", msg_or_ip, port_or_nil)
+while true do
+  local event = host:service(100)
+
+  if event and event.type == "receive" then
+    print("Got message: ", event.data, event.peer)
+    event.peer:send(event.data)
   end
 
-  socket.sleep(0.01)
+  print("....", event)
+  
 end
+
 

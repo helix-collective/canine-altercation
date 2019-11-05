@@ -1,22 +1,24 @@
-local enet = require "enet"
-local host = enet.host_create("localhost:6789")
+-- From https://leafo.net/lua-enet/#tutorial
+-- client.lua
+require "enet"
+local host = enet.host_create()
+local server = host:connect("localhost:12345")
+print('connect ')
 
-local socket = require("socket")
-local udp = socket.udp()
-
-udp:settimeout(0)
-udp:setpeername("localhost", 12345)
-
-local running = true
-
-while running do
-  
-  udp:send("helloworld!!!")
-  print("xx")
-
-  local data = udp:receive()
-  print(data)
-  
-  socket.sleep(1)
+local done = false
+while not done do
+  local event = host:service(100)
+  print('event ', event)
+  if event then
+    if event.type == "connect" then
+      print("Connected to", event.peer)
+      event.peer:send("hello world")
+    elseif event.type == "receive" then
+      print("Got message: ", event.data, event.peer)
+      done = true
+    end
+  end
 end
 
+server:disconnect()
+host:flush()
