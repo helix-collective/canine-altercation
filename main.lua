@@ -76,62 +76,6 @@ function resetGameState()
     ship1.sprite = love.graphics.newImage("/assets/PNG/Sprites/Ships/spaceShips_009.png")
     table.insert(objects.ships, ship1)
 
-    local ship2 = {}
-    ship2.type = 'ship'
-    ship2.body = love.physics.newBody(world, arenaWidth / 4 * 3, arenaHeight / 4 * 3, "dynamic") --place the body in the center of the world and make it dynamic, so it can move around
-    ship2.body:setAngularDamping(1000)  --for colissions
-    ship2.shape = love.physics.newCircleShape(shipRadius)
-    ship2.fixture = love.physics.newFixture(ship2.body, ship2.shape, 1) -- Attach fixture to body and give it a density of 1.
-    ship2.fixture:setRestitution(0.1)
-    ship2.fixture:setUserData(ship2)
-    ship2.fixture:setCategory(SHIP_CATEGORY_BASE + 2)
-    ship2.shipSpeed = 0
-    ship2.rate_limited = 0
-    ship2.deathPsystem = deathPsystem:clone()
-    ship2.sprite = love.graphics.newImage("/assets/PNG/Sprites/Ships/spaceShips_004.png")
-    -- ship2.shader = effect
-    table.insert(objects.ships, ship2)
-    
-    -- objects.topWall = {}
-    -- objects.topWall.type = 'wall'
-    -- objects.topWall.reflectType = 'x'
-    -- objects.topWall.body = love.physics.newBody(world, arenaWidth / 2, 0, "static")
-    -- objects.topWall.angle = -math.pi / 2
-    -- objects.topWall.shape = love.physics.newRectangleShape(arenaWidth, 1)
-    -- objects.topWall.fixture = love.physics.newFixture(objects.topWall.body, objects.topWall.shape)
-    -- objects.topWall.fixture:setRestitution(0.2)
-    -- objects.topWall.fixture:setUserData(objects.topWall)
-
-    -- objects.bottomWall = {}
-    -- objects.bottomWall.type = 'wall'
-    -- objects.bottomWall.reflectType = 'x'
-    -- objects.bottomWall.body = love.physics.newBody(world, arenaWidth / 2, arenaHeight, "static")
-    -- objects.bottomWall.angle = math.pi / 2
-    -- objects.bottomWall.shape = love.physics.newRectangleShape(arenaWidth, 1)
-    -- objects.bottomWall.fixture = love.physics.newFixture(objects.bottomWall.body, objects.bottomWall.shape)
-    -- objects.bottomWall.fixture:setRestitution(0.2)
-    -- objects.bottomWall.fixture:setUserData(objects.bottomWall)
-
-    -- objects.leftWall = {}
-    -- objects.leftWall.type = 'wall'
-    -- objects.leftWall.reflectType = 'y'
-    -- objects.leftWall.body = love.physics.newBody(world, 0, arenaHeight / 2, "static")
-    -- objects.leftWall.angle = 0
-    -- objects.leftWall.shape = love.physics.newRectangleShape(1, arenaHeight)
-    -- objects.leftWall.fixture = love.physics.newFixture(objects.leftWall.body, objects.leftWall.shape)
-    -- objects.leftWall.fixture:setRestitution(0.2)
-    -- objects.leftWall.fixture:setUserData(objects.leftWall)
-
-    -- objects.rightWall = {}
-    -- objects.rightWall.type = 'wall'
-    -- objects.rightWall.reflectType = 'y'
-    -- objects.rightWall.body = love.physics.newBody(world, arenaWidth, arenaHeight / 2, "static")
-    -- objects.rightWall.angle = math.pi
-    -- objects.rightWall.shape = love.physics.newRectangleShape(1, arenaHeight)
-    -- objects.rightWall.fixture = love.physics.newFixture(objects.rightWall.body, objects.rightWall.shape)
-    -- objects.rightWall.fixture:setRestitution(0.2)
-    -- objects.rightWall.fixture:setUserData(objects.rightWall)
-    
     objects.bullets = {} -- list of bullets
 end
 
@@ -203,11 +147,6 @@ function love.update(dt)
     elseif love.keyboard.isDown('left') then
         objects.ships[1].body:setAngle(objects.ships[1].body:getAngle() - anglePerDt * dt)
     end
-    if love.keyboard.isDown('d') then
-        objects.ships[2].body:setAngle(objects.ships[2].body:getAngle() + anglePerDt * dt)
-    elseif love.keyboard.isDown('a') then
-        objects.ships[2].body:setAngle(objects.ships[2].body:getAngle() - anglePerDt * dt)
-    end
     
 
     -- Accelerate ships
@@ -215,12 +154,6 @@ function love.update(dt)
         objects.ships[1].shipSpeed = objects.ships[1].shipSpeed + math.max(0, maxSpeed - objects.ships[1].shipSpeed) * dt
     elseif love.keyboard.isDown('down') then
         objects.ships[1].shipSpeed = objects.ships[1].shipSpeed + math.min(0, -maxSpeed - objects.ships[1].shipSpeed) * dt
-    end
-
-    if love.keyboard.isDown('w') then
-        objects.ships[2].shipSpeed = objects.ships[2].shipSpeed + math.max(0, maxSpeed - objects.ships[2].shipSpeed) * dt
-    elseif love.keyboard.isDown('s') then
-        objects.ships[2].shipSpeed = objects.ships[2].shipSpeed + math.min(0, -maxSpeed - objects.ships[2].shipSpeed) * dt
     end
 
     -- If a ship is dead it can no longer move
@@ -263,25 +196,6 @@ function love.keypressed(key)
         newBullet.fixture:setUserData(newBullet) 
         newBullet.type = 'bullet'
         
-        table.insert(objects.bullets, newBullet)
-        objects.ships[1].rate_limited = 1000
-    end
-    if objects.ships[1].rate_limited < 0 and not(objects.ships[2].dead) and key == "tab" then
-        local newBullet = {}
-        newBullet.body = love.physics.newBody(world,
-            objects.ships[2].body:getX() + math.cos(objects.ships[2].body:getAngle()) * shipRadius,
-            objects.ships[2].body:getY() + math.sin(objects.ships[2].body:getAngle()) * shipRadius,
-            "dynamic")
-        newBullet.body:setLinearVelocity(math.cos(objects.ships[2].body:getAngle()) * bulletSpeed,
-            math.sin(objects.ships[2].body:getAngle()) * bulletSpeed)
-        newBullet.shape = love.physics.newCircleShape(5)
-        newBullet.fixture = love.physics.newFixture(newBullet.body, newBullet.shape, 1)
-        newBullet.fixture:setRestitution(0.1)
-        newBullet.fixture:setCategory(CATEGORY_BULLET, SHIP_CATEGORY_BASE + 2)
-        newBullet.fixture:setMask(CATEGORY_BULLET, SHIP_CATEGORY_BASE + 2)
-        newBullet.fixture:setUserData(newBullet)
-        newBullet.type = 'bullet'
-
         table.insert(objects.bullets, newBullet)
         objects.ships[1].rate_limited = 1000
     end
