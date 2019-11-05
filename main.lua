@@ -14,6 +14,8 @@ function love.load()
   CATEGORY_BULLET = 9
   SHIP_CATEGORY_BASE = 10
 
+  PLANETS = 20
+
 
   -- Game State
   resetGameState()
@@ -77,9 +79,9 @@ function resetGameState()
     table.insert(objects.ships, ship1)
 
     objects.planets = {}
-    for i=1,10,1 do
+    for i=1,PLANETS,1 do
         local planet = {}
-        planet.body = love.physics.newBody(world, math.random(arenaWidth), math.random(arenaHeight), "static") --place the body in the center of the world and make it dynamic, so it can move around
+        planet.body = love.physics.newBody(world, love.math.random(arenaWidth), love.math.random(arenaHeight), "static") --place the body in the center of the world and make it dynamic, so it can move around
         planet.sprite = love.graphics.newImage("/assets/PNG/Sprites/Meteors/spaceMeteors_001.png")
         table.insert(objects.planets, planet)
     end
