@@ -17,6 +17,15 @@ function love.load()
 
   -- Game State
   resetGameState()
+
+  -- Networking
+  local socket = require "socket"
+
+  -- the address and port of the server
+  local address, port = "localhost", 3337
+  udp = socket.udp()
+  udp:settimeout(0)
+  udp:setpeername(address, port);
 end
 
 function resetGameState()
@@ -244,6 +253,13 @@ function love.update(dt)
 
         ship.deathPsystem:update(dt)
     end
+
+    networkSendTic()
+end
+
+function networkSendTic()
+    local msg = string.format("%s %s $", objects.ships[1].body:getX(), objects.ships[1].body:getY())
+    udp:send(msg)
 end
 
 function love.keypressed(key)
