@@ -19,13 +19,9 @@ function love.load()
   resetGameState()
 
   -- Networking
-  local socket = require "socket"
-
-  -- the address and port of the server
-  local address, port = "localhost", 3337
-  udp = socket.udp()
-  udp:settimeout(0)
-  udp:setpeername(address, port);
+  enet = require("enet")
+  host = enet.host_create()
+  server = host:connect("localhost:12345")
 end
 
 function resetGameState()
@@ -258,8 +254,19 @@ function love.update(dt)
 end
 
 function networkSendTic()
-    local msg = string.format("%s %s $", objects.ships[1].body:getX(), objects.ships[1].body:getY())
-    udp:send(msg)
+    local event = host:service(0)
+
+    --local msg = string.format("%s %s $", objects.ships[1].body:getX(), objects.ships[1].body:getY())
+    --udp:send(msg)
+    if(event) then
+      event.peer:send("hello world")
+
+      if event.type == "connect" then
+        print("Connected to", event.peer)  
+      elseif event.type == "receive" then
+        print("Got message: ", event.data, event.peer)
+      end
+    end
 end
 
 function love.keypressed(key)
