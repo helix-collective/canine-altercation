@@ -5,8 +5,8 @@ function love.load()
   -- Game Constants
   anglePerDt = 5
   shipSpeedDt = 200
-  arenaWidth = love.graphics.getWidth()
-  arenaHeight = love.graphics.getHeight()
+  arenaWidth = love.graphics.getWidth() * 1
+  arenaHeight = love.graphics.getHeight() * 1
   maxSpeed = 500
   bulletSpeed = 1000
   shipRadius = 30
@@ -89,48 +89,48 @@ function resetGameState()
     ship2.rate_limited = 0
     ship2.deathPsystem = deathPsystem:clone()
     ship2.sprite = love.graphics.newImage("/assets/PNG/Sprites/Ships/spaceShips_004.png")
-    --ship2.shader = effect
+    -- ship2.shader = effect
     table.insert(objects.ships, ship2)
     
-    objects.topWall = {}
-    objects.topWall.type = 'wall'
-    objects.topWall.reflectType = 'x'
-    objects.topWall.body = love.physics.newBody(world, arenaWidth / 2, 0, "static")
-    objects.topWall.angle = -math.pi / 2
-    objects.topWall.shape = love.physics.newRectangleShape(arenaWidth, 1)
-    objects.topWall.fixture = love.physics.newFixture(objects.topWall.body, objects.topWall.shape)
-    objects.topWall.fixture:setRestitution(0.2)
-    objects.topWall.fixture:setUserData(objects.topWall)
+    -- objects.topWall = {}
+    -- objects.topWall.type = 'wall'
+    -- objects.topWall.reflectType = 'x'
+    -- objects.topWall.body = love.physics.newBody(world, arenaWidth / 2, 0, "static")
+    -- objects.topWall.angle = -math.pi / 2
+    -- objects.topWall.shape = love.physics.newRectangleShape(arenaWidth, 1)
+    -- objects.topWall.fixture = love.physics.newFixture(objects.topWall.body, objects.topWall.shape)
+    -- objects.topWall.fixture:setRestitution(0.2)
+    -- objects.topWall.fixture:setUserData(objects.topWall)
 
-    objects.bottomWall = {}
-    objects.bottomWall.type = 'wall'
-    objects.bottomWall.reflectType = 'x'
-    objects.bottomWall.body = love.physics.newBody(world, arenaWidth / 2, arenaHeight, "static")
-    objects.bottomWall.angle = math.pi / 2
-    objects.bottomWall.shape = love.physics.newRectangleShape(arenaWidth, 1)
-    objects.bottomWall.fixture = love.physics.newFixture(objects.bottomWall.body, objects.bottomWall.shape)
-    objects.bottomWall.fixture:setRestitution(0.2)
-    objects.bottomWall.fixture:setUserData(objects.bottomWall)
+    -- objects.bottomWall = {}
+    -- objects.bottomWall.type = 'wall'
+    -- objects.bottomWall.reflectType = 'x'
+    -- objects.bottomWall.body = love.physics.newBody(world, arenaWidth / 2, arenaHeight, "static")
+    -- objects.bottomWall.angle = math.pi / 2
+    -- objects.bottomWall.shape = love.physics.newRectangleShape(arenaWidth, 1)
+    -- objects.bottomWall.fixture = love.physics.newFixture(objects.bottomWall.body, objects.bottomWall.shape)
+    -- objects.bottomWall.fixture:setRestitution(0.2)
+    -- objects.bottomWall.fixture:setUserData(objects.bottomWall)
 
-    objects.leftWall = {}
-    objects.leftWall.type = 'wall'
-    objects.leftWall.reflectType = 'y'
-    objects.leftWall.body = love.physics.newBody(world, 0, arenaHeight / 2, "static")
-    objects.leftWall.angle = 0
-    objects.leftWall.shape = love.physics.newRectangleShape(1, arenaHeight)
-    objects.leftWall.fixture = love.physics.newFixture(objects.leftWall.body, objects.leftWall.shape)
-    objects.leftWall.fixture:setRestitution(0.2)
-    objects.leftWall.fixture:setUserData(objects.leftWall)
+    -- objects.leftWall = {}
+    -- objects.leftWall.type = 'wall'
+    -- objects.leftWall.reflectType = 'y'
+    -- objects.leftWall.body = love.physics.newBody(world, 0, arenaHeight / 2, "static")
+    -- objects.leftWall.angle = 0
+    -- objects.leftWall.shape = love.physics.newRectangleShape(1, arenaHeight)
+    -- objects.leftWall.fixture = love.physics.newFixture(objects.leftWall.body, objects.leftWall.shape)
+    -- objects.leftWall.fixture:setRestitution(0.2)
+    -- objects.leftWall.fixture:setUserData(objects.leftWall)
 
-    objects.rightWall = {}
-    objects.rightWall.type = 'wall'
-    objects.rightWall.reflectType = 'y'
-    objects.rightWall.body = love.physics.newBody(world, arenaWidth, arenaHeight / 2, "static")
-    objects.rightWall.angle = math.pi
-    objects.rightWall.shape = love.physics.newRectangleShape(1, arenaHeight)
-    objects.rightWall.fixture = love.physics.newFixture(objects.rightWall.body, objects.rightWall.shape)
-    objects.rightWall.fixture:setRestitution(0.2)
-    objects.rightWall.fixture:setUserData(objects.rightWall)
+    -- objects.rightWall = {}
+    -- objects.rightWall.type = 'wall'
+    -- objects.rightWall.reflectType = 'y'
+    -- objects.rightWall.body = love.physics.newBody(world, arenaWidth, arenaHeight / 2, "static")
+    -- objects.rightWall.angle = math.pi
+    -- objects.rightWall.shape = love.physics.newRectangleShape(1, arenaHeight)
+    -- objects.rightWall.fixture = love.physics.newFixture(objects.rightWall.body, objects.rightWall.shape)
+    -- objects.rightWall.fixture:setRestitution(0.2)
+    -- objects.rightWall.fixture:setUserData(objects.rightWall)
     
     objects.bullets = {} -- list of bullets
 end
