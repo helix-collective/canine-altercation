@@ -14,6 +14,9 @@ function love.load()
   CATEGORY_BULLET = 9
   SHIP_CATEGORY_BASE = 10
 
+  thisQuad = love.graphics.newQuad(0,0,arenaWidth,arenaHeight,32,32)
+  thisImage = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_001.png')
+  thisImage:setWrap('repeat','repeat')
 
   -- Game State
   resetGameState()
@@ -362,4 +365,6 @@ function love.draw()
                                         arenaHeight / 2 - winFont:getHeight() / 2)
         love.graphics.setFont(prevFont)
     end
+
+    love.graphics.draw(thisImage,thisQuad,0,0)
 end
