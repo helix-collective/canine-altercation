@@ -301,9 +301,14 @@ function drawShips()
 end
 
 function drawBullets()
-    for bulletIndex, bullet in ipairs(objects.bullets) do
-        love.graphics.setColor(0, 1, 0)
-        love.graphics.circle('fill', bullet.body:getX(), bullet.body:getY(), 5)
+    -- Once a bullet is an image, we can use the "drawInWorld" function
+    for i=-1,1 do
+        for j=-1,1 do
+            for bulletIndex, bullet in ipairs(objects.bullets) do
+                love.graphics.setColor(0, 1, 0)
+                love.graphics.circle('fill', bullet.body:getX() + i * arenaWidth, bullet.body:getY() + j * arenaHeight, 5)
+            end
+        end
     end
 end
 
