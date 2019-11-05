@@ -40,7 +40,7 @@ function newShip(ship_sprite)
     ship.fixture:setUserData(ship)
     ship.fixture:setCategory(NEXT_SHIP_CATEGORY)
     NEXT_SHIP_CATEGORY = NEXT_SHIP_CATEGORY + 1
-    ship.shipSpeed = 0
+    ship.speed = 0
     ship.reload_delay = 0
 
     -- Ship death explosion
@@ -98,17 +98,25 @@ function resetGameState()
     world = love.physics.newWorld(0, 0, arenaWidth, arenaHeight)
     world:setCallbacks(beginContact, endContact, preSolve, postSolve)
 
-    objects = {} -- table to hold all our physical objects
+    -- table to hold all our physical objects
+    objects = {} 
+
+    -- All ships (both current player, and others)
     objects.ships = {}
-    table.insert(objects.ships, newShip("/assets/PNG/Sprites/Ships/spaceShips_009.png"))
-    table.insert(objects.ships, newShip("/assets/PNG/Sprites/Ships/spaceShips_004.png"))
+    objects.myShip = newShip("/assets/PNG/Sprites/Ships/spaceShips_009.png")
+    table.insert(objects.ships, objects.myShip)
+    table.insert(objects.ships, newShip("/assets/PNG/Sprites/Ships/spaceShips_004.png")) -- enemy ship
+    table.insert(objects.ships, newShip("/assets/PNG/Sprites/Ships/spaceShips_005.png")) -- enemy ship
+    table.insert(objects.ships, newShip("/assets/PNG/Sprites/Ships/spaceShips_006.png")) -- enemy ship
     
+    -- Uncomment to add back in world borders (currently, world operates in wrap-around mode)
     -- objects.borders = {}
     -- objects.borders.top = newBorderWall('top')
     -- objects.borders.bottom = newBorderWall('bottom')
     -- objects.borders.left = newBorderWall('left')
     -- objects.borders.right = newBorderWall('right')
 
+    -- Bullets in flight
     objects.bullets = {} -- list of bullets
 end
 
@@ -126,11 +134,13 @@ function beginContact(a, b, coll)
     elseif b:getUserData().type == 'ship' then
         colShip = b:getUserData()
     end
+
     if a:getUserData().type == 'wall' then
         colWall = a:getUserData()
     elseif b:getUserData().type == 'wall' then
         colWall = b:getUserData()
     end
+
     if a:getUserData().type == 'bullet' then
         lBullet = a:getUserData()
     elseif b:getUserData().type == 'bullet' then
@@ -142,13 +152,15 @@ function beginContact(a, b, coll)
     if (not (colWall == nil) and not (colBullet == nil)) then
         colBullet.dead = true -- remove a bullet when it hits the wall in the next tic
     elseif (not (colShip == nil) and not (colBullet == nil)) then
-        colBullet.dead = true
+        -- If the ship isn't already dead, kick of the death animation
         if not (colShip.dead) then
             colShip.deathPsystem:reset()
+            colShip.deathPsystem:emit(1000)
         end
+
+        colBullet.dead = true
         colShip.dead = true
     end
-    
 end
 
 function endContact(a, b, coll)
@@ -175,105 +187,79 @@ function updateWorldObject(object)
 end
 
 function love.update(dt)
-    
     world:update(dt)
     camera:setPosition(objects.ships[1].body:getX() - (arenaWidth / 2), objects.ships[1].body:getY() - (arenaHeight / 2))
 
-    -- remove any bullets that have hit a wall
+    -- remove all dead bullets
+    local deadBulletIndexes = {}
     for bulletIndex, bullet in ipairs(objects.bullets) do
         updateWorldObject(bullet)
         if (bullet.dead) then
-            table.remove(objects.bullets, bulletIndex)
+            bullet.body:destroy()
+            table.insert(deadBulletIndexes, bulletIndex)
         end
+    end
+
+    for i, deadBulletIndex in ipairs(deadBulletIndexes) do
+      table.remove(objects.bullets, deadBulletIndex)
     end
 
     -- update ship angle
     if love.keyboard.isDown('right') then
-        objects.ships[1].body:setAngle(objects.ships[1].body:getAngle() + anglePerDt * dt)
+        objects.myShip.body:setAngle(objects.myShip.body:getAngle() + anglePerDt * dt)
     elseif love.keyboard.isDown('left') then
-        objects.ships[1].body:setAngle(objects.ships[1].body:getAngle() - anglePerDt * dt)
-    end
-    if love.keyboard.isDown('d') then
-        objects.ships[2].body:setAngle(objects.ships[2].body:getAngle() + anglePerDt * dt)
-    elseif love.keyboard.isDown('a') then
-        objects.ships[2].body:setAngle(objects.ships[2].body:getAngle() - anglePerDt * dt)
+        objects.myShip.body:setAngle(objects.myShip.body:getAngle() - anglePerDt * dt)
     end
     
-    -- Accelerate ships
+    -- Accelerate
     if love.keyboard.isDown('up') then
-        objects.ships[1].shipSpeed = objects.ships[1].shipSpeed + math.max(0, maxSpeed - objects.ships[1].shipSpeed) * dt
+        objects.myShip.speed = objects.myShip.speed + math.max(0, maxSpeed - objects.myShip.speed) * dt
     elseif love.keyboard.isDown('down') then
-        objects.ships[1].shipSpeed = objects.ships[1].shipSpeed + math.min(0, -maxSpeed - objects.ships[1].shipSpeed) * dt
+        objects.myShip.speed = objects.myShip.speed + math.min(0, -maxSpeed - objects.myShip.speed) * dt
     end
 
-    if love.keyboard.isDown('w') then
-        objects.ships[2].shipSpeed = objects.ships[2].shipSpeed + math.max(0, maxSpeed - objects.ships[2].shipSpeed) * dt
-    elseif love.keyboard.isDown('s') then
-        objects.ships[2].shipSpeed = objects.ships[2].shipSpeed + math.min(0, -maxSpeed - objects.ships[2].shipSpeed) * dt
-    end
+    -- Update reload Delay
+    objects.myShip.reload_delay = objects.myShip.reload_delay - dt
 
-    -- If a ship is dead it can no longer move
     for shipIndex, ship in ipairs(objects.ships) do
         if ship.dead then
-            ship.shipSpeed = 0
+          -- Do the death animation
+          ship.deathPsystem:update(dt)
+          
+          -- Hack, removing a ship entirely is hard, so instead we set set it's speed to 0,
+          -- and change it to a sensor, which will stop any collision responses.
+          -- https://love2d.org/wiki/Fixture:setSensor
+          ship.fixture:setSensor(true)
+          ship.speed = 0
         end
-        ship.reload_delay = ship.reload_delay - dt
-    end
 
-    for shipIndex, ship in ipairs(objects.ships) do
-        ship.body:setLinearVelocity(math.cos(ship.body:getAngle()) * ship.shipSpeed,
-                                    math.sin(ship.body:getAngle()) * ship.shipSpeed)
+        -- update velocity of all ships based on current state. We do this per tick as opposed to using the physics engine so we can control the gameplay
+        -- as ships don't move in 'real world' physics
+        ship.body:setLinearVelocity(math.cos(ship.body:getAngle()) * ship.speed,
+                                    math.sin(ship.body:getAngle()) * ship.speed)
         updateWorldObject(ship)
-    end
-
-    for shipIndex, ship in ipairs(objects.ships) do
-        if ship.dead and not(ship.deadAnimationDone) then
-            ship.deadAnimationDone = true
-            ship.deathPsystem:emit(1000)
-        end
-
-        ship.deathPsystem:update(dt)
     end
 end
 
 function love.keypressed(key)
-    if objects.ships[1].reload_delay < 0 and not(objects.ships[1].dead) and key == "space" then
+    if objects.myShip.reload_delay < 0 and not(objects.myShip.dead) and key == "space" then
         local newBullet = {}
         newBullet.body = love.physics.newBody(world, 
-                                objects.ships[1].body:getX() + math.cos(objects.ships[1].body:getAngle()) * shipRadius,
-                                objects.ships[1].body:getY() + math.sin(objects.ships[1].body:getAngle()) * shipRadius, 
+                                objects.myShip.body:getX() + math.cos(objects.myShip.body:getAngle()) * shipRadius,
+                                objects.myShip.body:getY() + math.sin(objects.myShip.body:getAngle()) * shipRadius, 
                                 "dynamic")
-        newBullet.body:setLinearVelocity(math.cos(objects.ships[1].body:getAngle()) * bulletSpeed, 
-                                         math.sin(objects.ships[1].body:getAngle()) * bulletSpeed)
+        newBullet.body:setLinearVelocity(math.cos(objects.myShip.body:getAngle()) * bulletSpeed, 
+                                         math.sin(objects.myShip.body:getAngle()) * bulletSpeed)
         newBullet.shape = love.physics.newCircleShape(5)
         newBullet.fixture = love.physics.newFixture(newBullet.body, newBullet.shape, 1)
         newBullet.fixture:setRestitution(0.1)
-        newBullet.fixture:setCategory(CATEGORY_BULLET, objects.ships[1].fixture:getCategory())
-        newBullet.fixture:setMask(CATEGORY_BULLET, objects.ships[1].fixture:getCategory())
+        newBullet.fixture:setCategory(CATEGORY_BULLET, objects.myShip.fixture:getCategory())
+        newBullet.fixture:setMask(CATEGORY_BULLET, objects.myShip.fixture:getCategory())
         newBullet.fixture:setUserData(newBullet) 
         newBullet.type = 'bullet'
         
         table.insert(objects.bullets, newBullet)
-        objects.ships[1].reload_delay = RELOAD_DELAY
-    end
-    if objects.ships[2].reload_delay < 0 and not(objects.ships[2].dead) and key == "tab" then
-        local newBullet = {}
-        newBullet.body = love.physics.newBody(world,
-            objects.ships[2].body:getX() + math.cos(objects.ships[2].body:getAngle()) * shipRadius,
-            objects.ships[2].body:getY() + math.sin(objects.ships[2].body:getAngle()) * shipRadius,
-            "dynamic")
-        newBullet.body:setLinearVelocity(math.cos(objects.ships[2].body:getAngle()) * bulletSpeed,
-            math.sin(objects.ships[2].body:getAngle()) * bulletSpeed)
-        newBullet.shape = love.physics.newCircleShape(5)
-        newBullet.fixture = love.physics.newFixture(newBullet.body, newBullet.shape, 1)
-        newBullet.fixture:setRestitution(0.1)
-        newBullet.fixture:setCategory(CATEGORY_BULLET, objects.ships[2].fixture:getCategory())
-        newBullet.fixture:setMask(CATEGORY_BULLET, objects.ships[2].fixture:getCategory())
-        newBullet.fixture:setUserData(newBullet)
-        newBullet.type = 'bullet'
-
-        table.insert(objects.bullets, newBullet)
-        objects.ships[2].reload_delay = RELOAD_DELAY
+        objects.myShip.reload_delay = RELOAD_DELAY
     end
 
     if key == 'r' then 
@@ -318,7 +304,7 @@ function drawWorld()
     drawShips()
     drawBullets()
 
-    -- Thruster
+    -- Thruster TODO(jeeva): Move into draw ship?
     thrustCurrentTic = thrustCurrentTic + 1
     if thrustCurrentTic > 15 then
         thrustCurrentTic = 0
@@ -328,8 +314,8 @@ function drawWorld()
         local thrustX = ship.body:getX() - ship.shape:getRadius() * math.cos(ship.body:getAngle()) 
         local thrustY = ship.body:getY() - ship.shape:getRadius() * math.sin(ship.body:getAngle())
     
-        if ship.shipSpeed > 0 and not(ship.dead) then
-            local thrustScale = ship.shipSpeed / maxSpeed * 3
+        if ship.speed > 0 and not(ship.dead) then
+            local thrustScale = ship.speed / maxSpeed * 3
             love.graphics.draw(thrustAnim[thrustCurrentFrame], thrustX, thrustY, ship.body:getAngle() + math.pi / 2, thrustScale, thrustScale, thrustWidth / 2, thrustHeight / 2)
         end
 
@@ -375,7 +361,7 @@ function love.draw()
         'shipX: '..objects.ships[1].body:getX(),
         'shipY: '..objects.ships[1].body:getY(),
         'reloadDelay: '..objects.ships[1].reload_delay,
-        'shipSpeed: '..objects.ships[1].shipSpeed,
+        'shipSpeed: '..objects.ships[1].speed,
         'collision: '..collisionText
     }, '\n'))
 
