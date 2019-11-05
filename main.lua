@@ -1,3 +1,7 @@
+socket = require('socket')
+uuid = require('./util/uuid')
+uuid.randomseed(socket.gettime()*10000)
+json = require('./util/json')
 
 function love.load()
   love.window.setMode(0, 0, {fullscreen=true, resizable=true, vsync=false})
@@ -67,6 +71,7 @@ function resetGameState()
     objects = {} -- table to hold all our physical objects
     objects.ships = {}
     local ship1 = {}
+    ship1.id = uuid()
     ship1.type = 'ship'
     ship1.body = love.physics.newBody(world, arenaWidth / 4, arenaHeight / 4, "dynamic") --place the body in the center of the world and make it dynamic, so it can move around
     ship1.body:setAngularDamping(1000)  --for colissions
@@ -80,8 +85,9 @@ function resetGameState()
     ship1.deathPsystem = deathPsystem:clone()
     ship1.sprite = love.graphics.newImage("/assets/PNG/Sprites/Ships/spaceShips_009.png")
     table.insert(objects.ships, ship1)
-
+    
     local ship2 = {}
+    ship2.id = uuid()
     ship2.type = 'ship'
     ship2.body = love.physics.newBody(world, arenaWidth / 4 * 3, arenaHeight / 4 * 3, "dynamic") --place the body in the center of the world and make it dynamic, so it can move around
     ship2.body:setAngularDamping(1000)  --for colissions
@@ -253,23 +259,87 @@ function love.update(dt)
     networkSendTic()
 end
 
+function shipToJson(state, ship)
+    local obj = {}
+    obj.dead = not(not(ship.dead))
+    if not(ship.dead) then
+        obj.pos = {}
+        obj.pos.x = ship.body:getX()
+        obj.pos.y = ship.body:getY()
+        obj.angle = ship.body:getAngle()
+        obj.speed = ship.shipSpeed
+    end
+    state.ships[ship.id] = obj
+end
+
+function jsonToShips(state)
+    -- hack to workaround objects -> ships array    state:  key'd object
+
+    local ownId = objects.ships[1].id
+    print('jsonToShips ownId:', ownId)
+    otherShip = objects.ships[2]
+    
+    for id,obj in pairs(state.ships) do
+        print('jsonToShips id:', id)
+        if (id ~= ownId) then
+            otherShip.body:setX(obj.pos.x)
+            otherShip.body:setY(obj.pos.y)
+            otherShip.body:setAngle(obj.angle)
+            otherShip.shipSpeed = obj.speed
+        end
+    end
+
+end
+
+
+function bulletToJson(state, bullet)
+    local obj = {}
+    obj.dead = not(not(bullet.dead))
+    if (not bullet.dead) then
+        obj.pos = {}
+        obj.vel = {}
+        obj.pos.x = bullet.body:getX()
+        obj.pos.y = bullet.body:getY()
+        obj.vel.x, obj.vel.y = bullet.body:getLinearVelocity()
+    end
+    state.bullets[bullet.id] = obj
+end
+
 function networkSendTic()
     local event = host:service(0)
 
+    local state = {}
+    state.ships = {}
+    state.bullets = {}
+
+    shipToJson(state, objects.ships[1])
+
+
+    -- todo: deal with bullet dead -> no bullet in object state!
+    --for bulletIndex, bullet in ipairs(objects.bullets) do
+    --    bulletToJson(state, bullet)
+    --end
+
+    local stateJsonStr = json.encode(state)
+    
     --local msg = string.format("%s %s $", objects.ships[1].body:getX(), objects.ships[1].body:getY())
     --udp:send(msg)
     if(event) then
-      event.peer:send("hello world")
+      event.peer:send(stateJsonStr)
 
       if event.type == "connect" then
         print("Connected to", event.peer)  
       elseif event.type == "receive" then
-        print("Got message: ", event.data, event.peer)
+        print("rx...", event.data)   
+        stateIn = json.decode(event.data)
+
+        jsonToShips(stateIn)
       end
     end
 end
 
 function love.keypressed(key)
+    
     if objects.ships[1].rate_limited < 0 and not(objects.ships[1].dead) and key == "space" then
         local newBullet = {}
         newBullet.body = love.physics.newBody(world, 
@@ -285,11 +355,12 @@ function love.keypressed(key)
         newBullet.fixture:setMask(CATEGORY_BULLET, SHIP_CATEGORY_BASE + 1)
         newBullet.fixture:setUserData(newBullet) 
         newBullet.type = 'bullet'
+        newBullet.id = uuid()
         
         table.insert(objects.bullets, newBullet)
         objects.ships[1].rate_limited = 1000
     end
-    if objects.ships[1].rate_limited < 0 and not(objects.ships[2].dead) and key == "tab" then
+    if objects.ships[2].rate_limited < 0 and not(objects.ships[2].dead) and key == "1" then
         local newBullet = {}
         newBullet.body = love.physics.newBody(world,
             objects.ships[2].body:getX() + math.cos(objects.ships[2].body:getAngle()) * shipRadius,
@@ -304,6 +375,7 @@ function love.keypressed(key)
         newBullet.fixture:setMask(CATEGORY_BULLET, SHIP_CATEGORY_BASE + 2)
         newBullet.fixture:setUserData(newBullet)
         newBullet.type = 'bullet'
+        newBullet.id = uuid()
 
         table.insert(objects.bullets, newBullet)
         objects.ships[1].rate_limited = 1000
