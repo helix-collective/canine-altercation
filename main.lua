@@ -50,6 +50,30 @@ function newShip(ship_sprite)
     return ship
 end
 
+function newBorderWall(pos)
+    local wall = {}
+    wall.type = 'wall'
+    wall.pos = pos
+    if pos == 'top' then
+      wall.body = love.physics.newBody(world, arenaWidth / 2, 0, "static")
+      wall.fixture = love.physics.newFixture(wall.body, love.physics.newRectangleShape(arenaWidth, 1))
+    elseif pos == 'bottom' then
+      wall.body = love.physics.newBody(world, arenaWidth / 2, arenaHeight, "static")
+      wall.fixture = love.physics.newFixture(wall.body, love.physics.newRectangleShape(arenaWidth, 1))
+    elseif pos == 'left' then
+      wall.body = love.physics.newBody(world, 0, arenaHeight / 2, "static")
+      wall.fixture = love.physics.newFixture(wall.body, love.physics.newRectangleShape(1, arenaHeight))
+    elseif pos == 'right' then
+      wall.body = love.physics.newBody(world, arenaWidth, arenaHeight / 2, "static")
+      wall.fixture = love.physics.newFixture(wall.body, love.physics.newRectangleShape(1, arenaHeight))
+    end
+    
+    wall.fixture:setRestitution(0.2)
+    wall.fixture:setUserData(wall)
+
+    return wall
+end
+
 function resetGameState()
     -- Game State
     collisionText = ''
@@ -73,46 +97,12 @@ function resetGameState()
     table.insert(objects.ships, newShip("/assets/PNG/Sprites/Ships/spaceShips_009.png"))
     table.insert(objects.ships, newShip("/assets/PNG/Sprites/Ships/spaceShips_004.png"))
     
-    objects.topWall = {}
-    objects.topWall.type = 'wall'
-    objects.topWall.reflectType = 'x'
-    objects.topWall.body = love.physics.newBody(world, arenaWidth / 2, 0, "static")
-    objects.topWall.angle = -math.pi / 2
-    objects.topWall.shape = love.physics.newRectangleShape(arenaWidth, 1)
-    objects.topWall.fixture = love.physics.newFixture(objects.topWall.body, objects.topWall.shape)
-    objects.topWall.fixture:setRestitution(0.2)
-    objects.topWall.fixture:setUserData(objects.topWall)
+    objects.borders = {}
+    objects.borders.top = newBorderWall('top')
+    objects.borders.bottom = newBorderWall('bottom')
+    objects.borders.left = newBorderWall('left')
+    objects.borders.right = newBorderWall('right')
 
-    objects.bottomWall = {}
-    objects.bottomWall.type = 'wall'
-    objects.bottomWall.reflectType = 'x'
-    objects.bottomWall.body = love.physics.newBody(world, arenaWidth / 2, arenaHeight, "static")
-    objects.bottomWall.angle = math.pi / 2
-    objects.bottomWall.shape = love.physics.newRectangleShape(arenaWidth, 1)
-    objects.bottomWall.fixture = love.physics.newFixture(objects.bottomWall.body, objects.bottomWall.shape)
-    objects.bottomWall.fixture:setRestitution(0.2)
-    objects.bottomWall.fixture:setUserData(objects.bottomWall)
-
-    objects.leftWall = {}
-    objects.leftWall.type = 'wall'
-    objects.leftWall.reflectType = 'y'
-    objects.leftWall.body = love.physics.newBody(world, 0, arenaHeight / 2, "static")
-    objects.leftWall.angle = 0
-    objects.leftWall.shape = love.physics.newRectangleShape(1, arenaHeight)
-    objects.leftWall.fixture = love.physics.newFixture(objects.leftWall.body, objects.leftWall.shape)
-    objects.leftWall.fixture:setRestitution(0.2)
-    objects.leftWall.fixture:setUserData(objects.leftWall)
-
-    objects.rightWall = {}
-    objects.rightWall.type = 'wall'
-    objects.rightWall.reflectType = 'y'
-    objects.rightWall.body = love.physics.newBody(world, arenaWidth, arenaHeight / 2, "static")
-    objects.rightWall.angle = math.pi
-    objects.rightWall.shape = love.physics.newRectangleShape(1, arenaHeight)
-    objects.rightWall.fixture = love.physics.newFixture(objects.rightWall.body, objects.rightWall.shape)
-    objects.rightWall.fixture:setRestitution(0.2)
-    objects.rightWall.fixture:setUserData(objects.rightWall)
-    
     objects.bullets = {} -- list of bullets
 end
 
