@@ -222,6 +222,16 @@ function love.keypressed(key)
 end
 
 function love.draw()
+    -- Debug
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.print(table.concat({
+        'shipAngle: '..objects.ships[1].body:getAngle(),
+        'shipX: '..objects.ships[1].body:getX(),
+        'shipY: '..objects.ships[1].body:getY(),
+        'shipSpeed: '..objects.ships[1].shipSpeed,
+        'collision: '..collisionText
+    }, '\n'))
+
     camera:set()
     love.graphics.draw(thisImage,thisQuad,0,0)
     for planetIndex, planet in ipairs(objects.planets) do
@@ -241,15 +251,6 @@ function love.draw()
         love.graphics.circle('fill', bullet.body:getX(), bullet.body:getY(), 5)
     end
 
-    -- Debug
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.print(table.concat({
-        'shipAngle: '..objects.ships[1].body:getAngle(),
-        'shipX: '..objects.ships[1].body:getX(),
-        'shipY: '..objects.ships[1].body:getY(),
-        'shipSpeed: '..objects.ships[1].shipSpeed,
-        'collision: '..collisionText
-    }, '\n'))
 
     -- Thruster
     thrustCurrentTic = thrustCurrentTic + 1
