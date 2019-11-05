@@ -1,4 +1,6 @@
 
+require "camera"
+
 function love.load()
   love.window.setMode(0, 0, {fullscreen=true, resizable=true, vsync=false})
   
@@ -144,6 +146,7 @@ function postSolve(a, b, coll, normalimpulse, tangentimpulse)
 end
 
 function love.update(dt)
+    camera:setPosition(objects.ships[1].body:getX() - (arenaWidth / 2), objects.ships[1].body:getY() - (arenaHeight / 2))
     
     world:update(dt)
 
@@ -219,6 +222,7 @@ function love.keypressed(key)
 end
 
 function love.draw()
+    camera:set()
     love.graphics.draw(thisImage,thisQuad,0,0)
     for planetIndex, planet in ipairs(objects.planets) do
         love.graphics.draw(planet.sprite, planet.body:getX(), planet.body:getY(), planet.body:getAngle() - math.pi/2, 0.75, 0.75, planet.sprite:getWidth()/2, planet.sprite:getHeight()/2)
@@ -293,4 +297,5 @@ function love.draw()
                                         arenaHeight / 2 - winFont:getHeight() / 2)
         love.graphics.setFont(prevFont)
     end
+    camera:unset()
 end
