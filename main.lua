@@ -22,6 +22,7 @@ function love.load()
 
   CATEGORY_BULLET = 9
   NEXT_SHIP_CATEGORY = 10
+  ASTEROIDS = 10
 
   thisQuad = love.graphics.newQuad(0,0,arenaWidth,arenaHeight,32,32)
   thisImage = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_001.png')
@@ -131,6 +132,16 @@ function resetGameState()
     -- objects.borders.right = newBorderWall('right')
 
     -- Bullets in flight
+
+    objects.asteroids = {}
+    for i=1,ASTEROIDS do
+        local asteroid = {}
+        asteroid.type = "asteroid"
+        asteroid.body = love.physics.newBody(world, love.math.random(0, arenaWidth), love.math.random(0, arenaHeight), "static")
+        asteroid.sprite = love.graphics.newImage('assets/PNG/Sprites/Meteors/spaceMeteors_001.png')
+        table.insert(objects.asteroids, asteroid)
+    end
+
     objects.bullets = {} -- list of bullets
 end
 
@@ -404,11 +415,18 @@ function drawBullets()
     end
 end
 
+function drawAsteroids()
+    for asteroidIndex, asteroid in ipairs(objects.asteroids) do
+        drawInWorld(asteroid.sprite, asteroid.body:getX(), asteroid.body:getY(), 0, 0.75, 0.75, asteroid.sprite:getWidth()/2, asteroid.sprite:getHeight()/2)
+    end
+end
+
 -- Draw in game objects, to be duplicated for wraparound
 function drawWorld()
     -- draw the ship
     drawShips()
     drawBullets()
+    drawAsteroids()
 
     -- Thruster TODO(jeeva): Move into draw ship?
     thrustCurrentTic = thrustCurrentTic + 1
