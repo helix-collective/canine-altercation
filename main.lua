@@ -1,3 +1,6 @@
+socket = require('socket')
+uuid = require('./util/uuid')
+uuid.randomseed(socket.gettime()*10000)
 
 require "camera"
 
@@ -29,10 +32,11 @@ function love.load()
   resetGameState()
 end
 
-function newShip(ship_sprite)
+function newShip(ship_sprite, id)
     -- Ship death explosion
 
     local ship = {}
+    ship.id = id
     ship.type = 'ship'
     -- place the body somewhere in the arena
     ship.body = love.physics.newBody(world, love.math.random(math.floor(shipRadius), math.floor(arenaWidth - shipRadius)), love.math.random(math.floor(shipRadius), math.floor(arenaHeight - shipRadius)), "dynamic")
@@ -106,11 +110,8 @@ function resetGameState()
 
     -- All ships (both current player, and others)
     objects.ships = {}
-    objects.myShip = newShip("/assets/PNG/Sprites/Ships/spaceShips_009.png")
+    objects.myShip = newShip("/assets/PNG/Sprites/Ships/spaceShips_009.png", uuid())
     table.insert(objects.ships, objects.myShip)
-    --table.insert(objects.ships, newShip("/assets/PNG/Sprites/Ships/spaceShips_004.png")) -- enemy ship
-    --table.insert(objects.ships, newShip("/assets/PNG/Sprites/Ships/spaceShips_005.png")) -- enemy ship
-    --table.insert(objects.ships, newShip("/assets/PNG/Sprites/Ships/spaceShips_006.png")) -- enemy ship
 
     -- Uncomment to add back in world borders (currently, world operates in wrap-around mode)
     -- objects.borders = {}
@@ -254,6 +255,7 @@ function love.keypressed(key)
         newBullet.body:setLinearVelocity(math.cos(objects.myShip.body:getAngle()) * bulletSpeed,
                                          math.sin(objects.myShip.body:getAngle()) * bulletSpeed)
         newBullet.body:setAngle(objects.myShip.body:getAngle())
+        newBullet.id = uuid()
         newBullet.shape = love.physics.newCircleShape(5)
         newBullet.sprite = love.graphics.newImage("/assets/PNG/Sprites/Missiles/spaceMissiles_001.png")
         newBullet.fixture = love.physics.newFixture(newBullet.body, newBullet.shape, 1)
@@ -262,6 +264,7 @@ function love.keypressed(key)
         newBullet.fixture:setMask(CATEGORY_BULLET, objects.myShip.fixture:getCategory())
         newBullet.fixture:setUserData(newBullet)
         newBullet.type = 'bullet'
+        newBullet.id = uuid()
 
         table.insert(objects.bullets, newBullet)
         bulletSound:play()
