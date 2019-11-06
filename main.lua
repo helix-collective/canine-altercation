@@ -11,11 +11,12 @@ function love.load()
   -- Game Constants
   anglePerDt = 5
   shipSpeedDt = 200
-  arenaWidth = love.graphics.getWidth()
-  arenaHeight = love.graphics.getHeight()
+  arenaWidth = love.graphics.getWidth() * 2
+  arenaHeight = love.graphics.getHeight() * 2
   maxSpeed = 500
   bulletSpeed = 1000
   shipRadius = 30
+  scale = 5
 
   RELOAD_DELAY = 2 -- seconds
 
@@ -38,6 +39,7 @@ function love.load()
   enet = require("enet")
   host = enet.host_create()
   server = host:connect("localhost:12345")
+  camera:setScale(scale, scale)
 end
 
 function newShip(ship_sprite, id)
@@ -200,7 +202,7 @@ end
 
 function love.update(dt)
     world:update(dt)
-    camera:setPosition(objects.myShip.body:getX() - (arenaWidth / 2), objects.myShip.body:getY() - (arenaHeight / 2))
+    camera:setPosition(objects.myShip.body:getX() - (scale * love.graphics.getWidth() / 2), objects.myShip.body:getY() - (scale * love.graphics.getHeight() / 2))
 
     -- remove all dead bullets
     local deadBulletIndexes = {}
