@@ -18,7 +18,7 @@ An arena style mmo dogfight. Started life as a side project on Helix's Perisher 
     sudo apt-get build-dep love
     sudo apt-get install mercurial
     hg clone ssh://hg@bitbucket.org/rude/love
-    cd love; mkdir build; cd built; cmake -DCMAKE_BUILD_TYPE=Release ..
+    cd love; mkdir build; cd build; cmake -DCMAKE_BUILD_TYPE=Release ..
     make -j 8
 
     cd ${gamedir}

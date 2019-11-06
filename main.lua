@@ -22,6 +22,9 @@ function love.load()
   thisImage = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_001.png')
   thisImage:setWrap('repeat','repeat')
 
+    -- loading the sound effect files
+    bulletSound = love.audio.newSource("assets/sound/pew.mp3", "static")
+
   -- Game State
   resetGameState()
 end
@@ -259,6 +262,7 @@ function love.keypressed(key)
         newBullet.type = 'bullet'
         
         table.insert(objects.bullets, newBullet)
+        bulletSound:play()
         objects.myShip.reload_delay = RELOAD_DELAY
     end
 
