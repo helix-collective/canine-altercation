@@ -23,6 +23,7 @@ function love.load()
   CATEGORY_BULLET = 9
   NEXT_SHIP_CATEGORY = 10
   ASTEROIDS = 10
+  ASTEROID_SPEED = 20
 
   thisQuad = love.graphics.newQuad(0,0,arenaWidth,arenaHeight,32,32)
   thisImage = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_001.png')
@@ -101,9 +102,11 @@ end
 function newAsteroid()
     local asteroid = {}
     asteroid.type = "asteroid"
-    asteroid.body = love.physics.newBody(world, love.math.random(0, arenaWidth), love.math.random(0, arenaHeight), "static")
+    asteroid.body = love.physics.newBody(world, love.math.random(0, arenaWidth), love.math.random(0, arenaHeight), "dynamic")
     asteroid.sprite = love.graphics.newImage('assets/PNG/Sprites/Meteors/spaceMeteors_001.png')
     asteroid.size = love.math.randomNormal(0.15, 0.5)
+    asteroid.body:setLinearVelocity(love.math.random(-ASTEROID_SPEED, ASTEROID_SPEED),
+                                    love.math.random(-ASTEROID_SPEED, ASTEROID_SPEED))
     return asteroid
 end
 
@@ -271,6 +274,10 @@ function love.update(dt)
         ship.body:setLinearVelocity(math.cos(ship.body:getAngle()) * ship.speed,
                                     math.sin(ship.body:getAngle()) * ship.speed)
         updateWorldObject(ship)
+    end
+
+    for asteroidIndex, asteroid in ipairs(objects.ships) do
+        updateWorldObject(asteroid)
     end
 
     networkSendTic()
