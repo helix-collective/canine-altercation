@@ -8,8 +8,7 @@ require "enet"
 local host = enet.host_create("*:12345")
 
 state = {}
-state.ships = {}
-state.bullets = {}
+state.objs = {}
 
 while true do
   local event = host:service(100)
@@ -18,8 +17,9 @@ while true do
     -- print("Got message: ", event.data, event.peer)
     statePart = json.decode(event.data)
 
-    for id,val in pairs(statePart.ships) do state.ships[id] = val end
-    for id,val in pairs(statePart.bullets) do state.bullets[id] = val end
+    for id,val in pairs(statePart.objs) do
+      state.objs[id] = val
+    end
 
     event.peer:send(json.encode(state))
   end

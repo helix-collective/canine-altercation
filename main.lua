@@ -287,20 +287,21 @@ function shipToJson(state, ship)
     local obj = {}
     obj.dead = not(not(ship.dead))
     if not(ship.dead) then
+        obj.type = 'ship'
         obj.pos = {}
         obj.pos.x = ship.body:getX()
         obj.pos.y = ship.body:getY()
         obj.angle = ship.body:getAngle()
         obj.speed = ship.shipSpeed
     end
-    state.ships[ship.id] = obj
+    state.objs[ship.id] = obj
 end
 
 function jsonToShips(state)
     local myShipId = objects.myShip.id
     
-    for id,obj in pairs(state.ships) do
-        if (id ~= myShipId) then
+    for id,obj in pairs(state.objs) do
+        if (obj.type == 'ship' and id ~= myShipId) then
             -- test if its in objects already
             local otherShip = objects.ships[id]
             if otherShip == nil then
@@ -324,6 +325,7 @@ function bulletToJson(state, bullet)
     local obj = {}
     obj.dead = not(not(bullet.dead))
     if (not bullet.dead) then
+        obj.type = 'bullet'
         obj.pos = {}
         obj.vel = {}
         obj.pos.x = bullet.body:getX()
@@ -337,8 +339,7 @@ function networkSendTic()
     local event = host:service(0)
 
     local state = {}
-    state.ships = {}
-    state.bullets = {}
+    state.objs = {}
 
     shipToJson(state, objects.myShip)
 
