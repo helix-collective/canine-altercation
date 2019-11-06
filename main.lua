@@ -98,6 +98,14 @@ function newBorderWall(pos)
     return wall
 end
 
+function newAsteroid()
+    local asteroid = {}
+    asteroid.type = "asteroid"
+    asteroid.body = love.physics.newBody(world, love.math.random(0, arenaWidth), love.math.random(0, arenaHeight), "static")
+    asteroid.sprite = love.graphics.newImage('assets/PNG/Sprites/Meteors/spaceMeteors_001.png')
+    return asteroid
+end
+
 function resetGameState()
     -- Game State
     collisionText = ''
@@ -135,10 +143,7 @@ function resetGameState()
 
     objects.asteroids = {}
     for i=1,ASTEROIDS do
-        local asteroid = {}
-        asteroid.type = "asteroid"
-        asteroid.body = love.physics.newBody(world, love.math.random(0, arenaWidth), love.math.random(0, arenaHeight), "static")
-        asteroid.sprite = love.graphics.newImage('assets/PNG/Sprites/Meteors/spaceMeteors_001.png')
+        local asteroid = newAsteroid()
         table.insert(objects.asteroids, asteroid)
     end
 
@@ -424,9 +429,9 @@ end
 -- Draw in game objects, to be duplicated for wraparound
 function drawWorld()
     -- draw the ship
+    drawAsteroids()
     drawShips()
     drawBullets()
-    drawAsteroids()
 
     -- Thruster TODO(jeeva): Move into draw ship?
     thrustCurrentTic = thrustCurrentTic + 1
