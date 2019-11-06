@@ -15,13 +15,19 @@ function love.load()
   arenaHeight = love.graphics.getHeight() * 2
   maxSpeed = 500
   bulletSpeed = 1000
+
+  -- ship & bullet radius tuned so that ship radius is inside the graphics size
+  -- bullet radius is about the size to fit in the area between ship circle and graphical shape of ship
   shipRadius = 30
+  bulletRadius = 5
+  epsRadius = 1e-3
+
   scale = 1
 
   RELOAD_DELAY = 2 -- seconds
 
   CATEGORY_BULLET = 9
-  NEXT_SHIP_CATEGORY = 10
+  SHIP_CATEGORY = 10
   ASTEROIDS = 10
   ASTEROID_SPEED = 20
 
@@ -57,8 +63,7 @@ function newShip(ship_sprite, id)
     ship.fixture = love.physics.newFixture(ship.body, ship.shape, 1) -- Attach fixture to body and give it a density of 1.
     ship.fixture:setRestitution(0.1)  -- how objects bounce of each other. https://www.scienceabc.com/pure-sciences/coefficient-of-restitution-definition-explanation-and-formula.html
     ship.fixture:setUserData(ship)
-    ship.fixture:setCategory(NEXT_SHIP_CATEGORY)
-    NEXT_SHIP_CATEGORY = NEXT_SHIP_CATEGORY + 1
+    ship.fixture:setCategory(SHIP_CATEGORY)
     ship.speed = 0
     ship.reload_delay = 0
 
@@ -176,7 +181,7 @@ function beginContact(a, b, coll)
     end
 
     if a:getUserData().type == 'bullet' then
-        lBullet = a:getUserData()
+        colBullet = a:getUserData()
     elseif b:getUserData().type == 'bullet' then
         colBullet = b:getUserData()
     end
@@ -302,7 +307,7 @@ end
 
 function jsonToGameObjects(state)
     local myShipId = objects.myShip.id
-    
+
     for id,obj in pairs(state.objs) do
         if (obj.type == 'ship' and not(obj.dead) and id ~= myShipId) then
             -- test if its in objects already
@@ -354,22 +359,22 @@ function networkSendTic()
     state.objs = {}
 
     shipToJson(state, objects.myShip)
- 
+
     for bulletId, bullet in pairs(objects.bullets) do
         bulletToJson(state, bullet, tNow)
     end
 
     local stateJsonStr = json.encode(state)
-    
+
     --local msg = string.format("%s %s $", objects.localShips[1].body:getX(), objects.localShips[1].body:getY())
     --udp:send(msg)
     if(event) then
       event.peer:send(stateJsonStr)
 
       if event.type == "connect" then
-        print("Connected to", event.peer)  
+        print("Connected to", event.peer)
       elseif event.type == "receive" then
-        print("rx...", event.data)   
+        print("rx...", event.data)
         stateIn = json.decode(event.data)
 
         jsonToGameObjects(stateIn)
@@ -383,12 +388,12 @@ function newBullet(x, y, vx, vy, angle, id)
     newBullet.body:setLinearVelocity(vx, vy)
     newBullet.body:setAngle(angle)
     newBullet.id = id
-    newBullet.shape = love.physics.newCircleShape(5)
+    newBullet.shape = love.physics.newCircleShape(bulletRadius)
     newBullet.sprite = love.graphics.newImage("/assets/PNG/Sprites/Missiles/spaceMissiles_001.png")
     newBullet.fixture = love.physics.newFixture(newBullet.body, newBullet.shape, 1)
     newBullet.fixture:setRestitution(0.1)
-    newBullet.fixture:setCategory(CATEGORY_BULLET, objects.myShip.fixture:getCategory())
-    newBullet.fixture:setMask(CATEGORY_BULLET, objects.myShip.fixture:getCategory())
+    newBullet.fixture:setCategory(CATEGORY_BULLET)
+    newBullet.fixture:setMask(CATEGORY_BULLET)
     newBullet.fixture:setUserData(newBullet)
     newBullet.type = 'bullet'
     return newBullet
@@ -397,8 +402,8 @@ end
 function love.keypressed(key)
     if objects.myShip.reload_delay < 0 and not(objects.myShip.dead) and key == "space" then
         local newBullet = newBullet(
-            objects.myShip.body:getX() + math.cos(objects.myShip.body:getAngle()) * shipRadius,
-            objects.myShip.body:getY() + math.sin(objects.myShip.body:getAngle()) * shipRadius,
+            objects.myShip.body:getX() + math.cos(objects.myShip.body:getAngle()) * (shipRadius + bulletRadius + epsRadius),
+            objects.myShip.body:getY() + math.sin(objects.myShip.body:getAngle()) * (shipRadius + bulletRadius + epsRadius),
             math.cos(objects.myShip.body:getAngle()) * bulletSpeed,
             math.sin(objects.myShip.body:getAngle()) * bulletSpeed,
             objects.myShip.body:getAngle(),
