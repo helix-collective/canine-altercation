@@ -134,7 +134,7 @@ function resetGameState()
     -- All ships (both current player, and others)
     objects.ships = {}
     objects.myShip = newShip("/assets/PNG/Sprites/Ships/spaceShips_009.png", uuid())
-    table.insert(objects.ships, objects.myShip)
+    objects.ships[objects.myShip.id] = objects.myShip
 
     -- Uncomment to add back in world borders (currently, world operates in wrap-around mode)
     -- objects.borders = {}
@@ -227,15 +227,17 @@ function love.update(dt)
     -- remove all dead bullets
     local deadBulletIds = {}
     for bulletId, bullet in pairs(objects.bullets) do
-        updateWorldObject(bullet)
-        if (bullet.dead) then
-            bullet.body:destroy()
-            table.insert(deadBulletIds, bulletIndex)
+        if (not bullet.dead) then
+            updateWorldObject(bullet)
+            if (bullet.dead) then
+                bullet.body:destroy()
+                table.insert(deadBulletIds, bulletId)
+            end
         end
     end
 
     for i, deadBulletId in pairs(deadBulletIds) do
-      objects.bullets[deadBulletIndex] = nil
+      objects.bullets[deadBulletId] = nil
     end
 
     -- update ship angle
@@ -286,6 +288,7 @@ end
 function shipToJson(state, ship)
     local obj = {}
     obj.dead = not(not(ship.dead))
+    obj.type = 'ship'
     if not(ship.dead) then
         obj.type = 'ship'
         obj.pos = {}
@@ -324,15 +327,15 @@ end
 function bulletToJson(state, bullet)
     local obj = {}
     obj.dead = not(not(bullet.dead))
+    obj.type = 'bullet'
     if (not bullet.dead) then
-        obj.type = 'bullet'
         obj.pos = {}
         obj.vel = {}
         obj.pos.x = bullet.body:getX()
         obj.pos.y = bullet.body:getY()
         obj.vel.x, obj.vel.y = bullet.body:getLinearVelocity()
     end
-    state.bullets[bullet.id] = obj
+    state.objs[bullet.id] = obj
 end
 
 function networkSendTic()
@@ -342,12 +345,10 @@ function networkSendTic()
     state.objs = {}
 
     shipToJson(state, objects.myShip)
-
-
-    -- todo: deal with bullet dead -> no bullet in object state!
-    --for bulletIndex, bullet in ipairs(objects.bullets) do
-    --    bulletToJson(state, bullet)
-    --end
+ 
+    for bulletId, bullet in pairs(objects.bullets) do
+        bulletToJson(state, bullet, tNow)
+    end
 
     local stateJsonStr = json.encode(state)
     
@@ -367,27 +368,33 @@ function networkSendTic()
     end
 end
 
+function newBullet(x, y, vx, vy, angle, id)
+    local newBullet = {}
+    newBullet.body = love.physics.newBody(world, x, y, "dynamic")
+    newBullet.body:setLinearVelocity(vx, vy)
+    newBullet.body:setAngle(angle)
+    newBullet.id = id
+    newBullet.shape = love.physics.newCircleShape(5)
+    newBullet.sprite = love.graphics.newImage("/assets/PNG/Sprites/Missiles/spaceMissiles_001.png")
+    newBullet.fixture = love.physics.newFixture(newBullet.body, newBullet.shape, 1)
+    newBullet.fixture:setRestitution(0.1)
+    newBullet.fixture:setCategory(CATEGORY_BULLET, objects.myShip.fixture:getCategory())
+    newBullet.fixture:setMask(CATEGORY_BULLET, objects.myShip.fixture:getCategory())
+    newBullet.fixture:setUserData(newBullet)
+    newBullet.type = 'bullet'
+    return newBullet
+end
+
 function love.keypressed(key)
     if objects.myShip.reload_delay < 0 and not(objects.myShip.dead) and key == "space" then
-        local newBullet = {}
-        newBullet.body = love.physics.newBody(world,
-                                objects.myShip.body:getX() + math.cos(objects.myShip.body:getAngle()) * shipRadius,
-                                objects.myShip.body:getY() + math.sin(objects.myShip.body:getAngle()) * shipRadius,
-                                "dynamic")
-        newBullet.body:setLinearVelocity(math.cos(objects.myShip.body:getAngle()) * bulletSpeed,
-                                         math.sin(objects.myShip.body:getAngle()) * bulletSpeed)
-        newBullet.body:setAngle(objects.myShip.body:getAngle())
-        newBullet.id = uuid()
-        newBullet.id = uuid()
-        newBullet.shape = love.physics.newCircleShape(5)
-        newBullet.sprite = love.graphics.newImage("/assets/PNG/Sprites/Missiles/spaceMissiles_001.png")
-        newBullet.fixture = love.physics.newFixture(newBullet.body, newBullet.shape, 1)
-        newBullet.fixture:setRestitution(0.1)
-        newBullet.fixture:setCategory(CATEGORY_BULLET, objects.myShip.fixture:getCategory())
-        newBullet.fixture:setMask(CATEGORY_BULLET, objects.myShip.fixture:getCategory())
-        newBullet.fixture:setUserData(newBullet)
-        newBullet.type = 'bullet'
-        newBullet.id = uuid()
+        local newBullet = newBullet(
+            objects.myShip.body:getX() + math.cos(objects.myShip.body:getAngle()) * shipRadius,
+            objects.myShip.body:getY() + math.sin(objects.myShip.body:getAngle()) * shipRadius,
+            math.cos(objects.myShip.body:getAngle()) * bulletSpeed,
+            math.sin(objects.myShip.body:getAngle()) * bulletSpeed,
+            objects.myShip.body:getAngle(),
+            uuid()
+        )
 
         objects.bullets[newBullet.id] = newBullet
         bulletSound:play()
@@ -425,7 +432,9 @@ end
 function drawBullets()
     -- Once a bullet is an image, we can use the "drawInWorld" function
     for bulletId, bullet in pairs(objects.bullets) do
-        drawInWorld(bullet.sprite, bullet.body:getX(), bullet.body:getY(), bullet.body:getAngle() + math.pi/2, 0.75, 0.75, bullet.sprite:getWidth()/2, bullet.sprite:getHeight()/2)
+        if(not bullet.dead) then
+            drawInWorld(bullet.sprite, bullet.body:getX(), bullet.body:getY(), bullet.body:getAngle() + math.pi/2, 0.75, 0.75, bullet.sprite:getWidth()/2, bullet.sprite:getHeight()/2)
+        end
     end
 end
 
