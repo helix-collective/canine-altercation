@@ -30,7 +30,7 @@ function love.load()
   thisImage:setWrap('repeat','repeat')
 
     -- loading the sound effect files
-    bulletSound = love.audio.newSource("assets/sound/pew.mp3", "static")
+    bulletSound = love.audio.newSource("assets/sound/spacepew1.mp3", "static")
     shipZoomSound = love.audio.newSource("assets/sound/zoom.mp3", "static")
     shipZoomSound:setVolume(0.5)
     shipBreakSound = love.audio.newSource("assets/sound/spacebreaks.mp3", "static")
