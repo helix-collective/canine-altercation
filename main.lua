@@ -26,9 +26,11 @@ function love.load()
   thisImage = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_001.png')
   thisImage:setWrap('repeat','repeat')
 
-  -- loading the sound effect files
-  bulletSound = love.audio.newSource("assets/sound/pew.mp3", "static")
-
+    -- loading the sound effect files
+    bulletSound = love.audio.newSource("assets/sound/pew.mp3", "static")
+    shipZoomSound = love.audio.newSource("assets/sound/zoom.mp3", "static")
+    shipZoomSound:setVolume(0.5)
+    shipBreakSound = love.audio.newSource("assets/sound/spacebreaks.mp3", "static")
   -- Game State
   resetGameState()
 
@@ -224,8 +226,10 @@ function love.update(dt)
     -- Accelerate
     if love.keyboard.isDown('up') then
         objects.myShip.speed = objects.myShip.speed + math.max(0, maxSpeed - objects.myShip.speed) * dt
+        shipZoomSound:play()
     elseif love.keyboard.isDown('down') then
         objects.myShip.speed = objects.myShip.speed + math.min(0, -maxSpeed - objects.myShip.speed) * dt
+        shipBreakSound:play()
     end
 
     -- Update reload Delay
