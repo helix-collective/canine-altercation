@@ -110,11 +110,26 @@ function newBorderWall(pos)
     return wall
 end
 
+function randAsteroidSprite()
+    local rand = math.floor(love.math.random(0, 4))
+    if rand == 0 then
+        return love.graphics.newImage('assets/PNG/Sprites/Meteors/spaceMeteors_001.png')
+    elseif rand == 1 then
+        return love.graphics.newImage('assets/PNG/Sprites/Meteors/spaceMeteors_002.png')
+    elseif rand == 2 then
+        return love.graphics.newImage('assets/PNG/Sprites/Meteors/spaceMeteors_003.png')
+    elseif rand == 3 then
+        return love.graphics.newImage('assets/PNG/Sprites/Meteors/spaceMeteors_004.png')
+    end
+    return love.graphics.newImage('assets/PNG/Sprites/Meteors/spaceMeteors_001.png')
+end
+
+
 function newAsteroid()
     local asteroid = {}
     asteroid.type = "asteroid"
     asteroid.body = love.physics.newBody(world, love.math.random(0, arenaWidth), love.math.random(0, arenaHeight), "dynamic")
-    asteroid.sprite = love.graphics.newImage('assets/PNG/Sprites/Meteors/spaceMeteors_001.png')
+    asteroid.sprite = randAsteroidSprite()
     asteroid.size = love.math.randomNormal(0.15, 0.5)
     asteroid.body:setLinearVelocity(love.math.random(-ASTEROID_SPEED, ASTEROID_SPEED),
                                     love.math.random(-ASTEROID_SPEED, ASTEROID_SPEED))
