@@ -15,6 +15,7 @@ An arena style mmo dogfight. Started life as a side project on Helix's Perisher 
 
 # Dev
 
+## Game
     sudo apt-get build-dep love
     sudo apt-get install mercurial
     hg clone ssh://hg@bitbucket.org/rude/love
@@ -23,3 +24,7 @@ An arena style mmo dogfight. Started life as a side project on Helix's Perisher 
 
     cd ${gamedir}
     ${lovebuilddir}/love .
+
+## Server
+
+    cd server; ./build.sh
