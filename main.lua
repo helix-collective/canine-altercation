@@ -225,17 +225,17 @@ function love.update(dt)
     camera:setPosition(objects.myShip.body:getX() - (scale * love.graphics.getWidth() / 2), objects.myShip.body:getY() - (scale * love.graphics.getHeight() / 2))
 
     -- remove all dead bullets
-    local deadBulletIndexes = {}
-    for bulletIndex, bullet in ipairs(objects.bullets) do
+    local deadBulletIds = {}
+    for bulletId, bullet in pairs(objects.bullets) do
         updateWorldObject(bullet)
         if (bullet.dead) then
             bullet.body:destroy()
-            table.insert(deadBulletIndexes, bulletIndex)
+            table.insert(deadBulletIds, bulletIndex)
         end
     end
 
-    for i, deadBulletIndex in ipairs(deadBulletIndexes) do
-      table.remove(objects.bullets, deadBulletIndex)
+    for i, deadBulletId in pairs(deadBulletIds) do
+      objects.bullets[deadBulletIndex] = nil
     end
 
     -- update ship angle
@@ -388,7 +388,7 @@ function love.keypressed(key)
         newBullet.type = 'bullet'
         newBullet.id = uuid()
 
-        table.insert(objects.bullets, newBullet)
+        objects.bullets[newBullet.id] = newBullet
         bulletSound:play()
         objects.myShip.reload_delay = RELOAD_DELAY
     end
@@ -423,7 +423,7 @@ end
 
 function drawBullets()
     -- Once a bullet is an image, we can use the "drawInWorld" function
-    for bulletIndex, bullet in ipairs(objects.bullets) do
+    for bulletId, bullet in pairs(objects.bullets) do
         drawInWorld(bullet.sprite, bullet.body:getX(), bullet.body:getY(), bullet.body:getAngle() + math.pi/2, 0.75, 0.75, bullet.sprite:getWidth()/2, bullet.sprite:getHeight()/2)
     end
 end
