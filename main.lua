@@ -3,7 +3,7 @@ require "camera"
 
 function love.load()
   love.window.setMode(0, 0, {fullscreen=true, resizable=true, vsync=false})
-  
+
   -- Game Constants
   anglePerDt = 5
   shipSpeedDt = 200
@@ -22,8 +22,8 @@ function love.load()
   thisImage = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_001.png')
   thisImage:setWrap('repeat','repeat')
 
-    -- loading the sound effect files
-    bulletSound = love.audio.newSource("assets/sound/pew.mp3", "static")
+  -- loading the sound effect files
+  bulletSound = love.audio.newSource("assets/sound/pew.mp3", "static")
 
   -- Game State
   resetGameState()
@@ -35,7 +35,7 @@ function newShip(ship_sprite)
     local ship = {}
     ship.type = 'ship'
     -- place the body somewhere in the arena
-    ship.body = love.physics.newBody(world, love.math.random(math.floor(shipRadius), math.floor(arenaWidth - shipRadius)), love.math.random(math.floor(shipRadius), math.floor(arenaHeight - shipRadius)), "dynamic") 
+    ship.body = love.physics.newBody(world, love.math.random(math.floor(shipRadius), math.floor(arenaWidth - shipRadius)), love.math.random(math.floor(shipRadius), math.floor(arenaHeight - shipRadius)), "dynamic")
     ship.body:setAngularDamping(1000)  --for colissions
     ship.shape = love.physics.newCircleShape(shipRadius)
     ship.fixture = love.physics.newFixture(ship.body, ship.shape, 1) -- Attach fixture to body and give it a density of 1.
@@ -76,7 +76,7 @@ function newBorderWall(pos)
       wall.body = love.physics.newBody(world, arenaWidth, arenaHeight / 2, "static")
       wall.fixture = love.physics.newFixture(wall.body, love.physics.newRectangleShape(1, arenaHeight))
     end
-    
+
     wall.fixture:setRestitution(0.2)
     wall.fixture:setUserData(wall)
 
@@ -102,16 +102,16 @@ function resetGameState()
     world:setCallbacks(beginContact, endContact, preSolve, postSolve)
 
     -- table to hold all our physical objects
-    objects = {} 
+    objects = {}
 
     -- All ships (both current player, and others)
     objects.ships = {}
     objects.myShip = newShip("/assets/PNG/Sprites/Ships/spaceShips_009.png")
     table.insert(objects.ships, objects.myShip)
-    table.insert(objects.ships, newShip("/assets/PNG/Sprites/Ships/spaceShips_004.png")) -- enemy ship
-    table.insert(objects.ships, newShip("/assets/PNG/Sprites/Ships/spaceShips_005.png")) -- enemy ship
-    table.insert(objects.ships, newShip("/assets/PNG/Sprites/Ships/spaceShips_006.png")) -- enemy ship
-    
+    --table.insert(objects.ships, newShip("/assets/PNG/Sprites/Ships/spaceShips_004.png")) -- enemy ship
+    --table.insert(objects.ships, newShip("/assets/PNG/Sprites/Ships/spaceShips_005.png")) -- enemy ship
+    --table.insert(objects.ships, newShip("/assets/PNG/Sprites/Ships/spaceShips_006.png")) -- enemy ship
+
     -- Uncomment to add back in world borders (currently, world operates in wrap-around mode)
     -- objects.borders = {}
     -- objects.borders.top = newBorderWall('top')
@@ -126,7 +126,7 @@ end
 function beginContact(a, b, coll)
 
     collisionText = a:getUserData().type..' with '..b:getUserData().type
-    
+
     -- Find the ship that collided
     local colShip
     local colWall
@@ -191,7 +191,7 @@ end
 
 function love.update(dt)
     world:update(dt)
-    camera:setPosition(objects.ships[1].body:getX() - (arenaWidth / 2), objects.ships[1].body:getY() - (arenaHeight / 2))
+    camera:setPosition(objects.myShip.body:getX() - (arenaWidth / 2), objects.myShip.body:getY() - (arenaHeight / 2))
 
     -- remove all dead bullets
     local deadBulletIndexes = {}
@@ -213,7 +213,7 @@ function love.update(dt)
     elseif love.keyboard.isDown('left') then
         objects.myShip.body:setAngle(objects.myShip.body:getAngle() - anglePerDt * dt)
     end
-    
+
     -- Accelerate
     if love.keyboard.isDown('up') then
         objects.myShip.speed = objects.myShip.speed + math.max(0, maxSpeed - objects.myShip.speed) * dt
@@ -224,11 +224,11 @@ function love.update(dt)
     -- Update reload Delay
     objects.myShip.reload_delay = objects.myShip.reload_delay - dt
 
-    for shipIndex, ship in ipairs(objects.ships) do
+    for shipId, ship in pairs(objects.ships) do
         if ship.dead then
           -- Do the death animation
           ship.deathPsystem:update(dt)
-          
+
           -- Hack, removing a ship entirely is hard, so instead we set set it's speed to 0,
           -- and change it to a sensor, which will stop any collision responses.
           -- https://love2d.org/wiki/Fixture:setSensor
@@ -247,11 +247,11 @@ end
 function love.keypressed(key)
     if objects.myShip.reload_delay < 0 and not(objects.myShip.dead) and key == "space" then
         local newBullet = {}
-        newBullet.body = love.physics.newBody(world, 
+        newBullet.body = love.physics.newBody(world,
                                 objects.myShip.body:getX() + math.cos(objects.myShip.body:getAngle()) * shipRadius,
-                                objects.myShip.body:getY() + math.sin(objects.myShip.body:getAngle()) * shipRadius, 
+                                objects.myShip.body:getY() + math.sin(objects.myShip.body:getAngle()) * shipRadius,
                                 "dynamic")
-        newBullet.body:setLinearVelocity(math.cos(objects.myShip.body:getAngle()) * bulletSpeed, 
+        newBullet.body:setLinearVelocity(math.cos(objects.myShip.body:getAngle()) * bulletSpeed,
                                          math.sin(objects.myShip.body:getAngle()) * bulletSpeed)
         newBullet.body:setAngle(objects.myShip.body:getAngle())
         newBullet.shape = love.physics.newCircleShape(5)
@@ -260,15 +260,15 @@ function love.keypressed(key)
         newBullet.fixture:setRestitution(0.1)
         newBullet.fixture:setCategory(CATEGORY_BULLET, objects.myShip.fixture:getCategory())
         newBullet.fixture:setMask(CATEGORY_BULLET, objects.myShip.fixture:getCategory())
-        newBullet.fixture:setUserData(newBullet) 
+        newBullet.fixture:setUserData(newBullet)
         newBullet.type = 'bullet'
-        
+
         table.insert(objects.bullets, newBullet)
         bulletSound:play()
         objects.myShip.reload_delay = RELOAD_DELAY
     end
 
-    if key == 'r' then 
+    if key == 'r' then
       resetGameState()
     end
 end
@@ -283,7 +283,7 @@ function drawInWorld(drawable, x, y, r, sx, sy, ox, oy)
 end
 
 function drawShips()
-    for shipIndex, ship in ipairs(objects.ships) do
+    for shipId, ship in pairs(objects.ships) do
         if not(ship.dead) then
             love.graphics.setShader(ship.shader)
             drawInWorld(ship.sprite, ship.body:getX(), ship.body:getY(), ship.body:getAngle() - math.pi/2, 0.75, 0.75, ship.sprite:getWidth()/2, ship.sprite:getHeight()/2)
@@ -311,10 +311,10 @@ function drawWorld()
         thrustCurrentTic = 0
     end
     local thrustCurrentFrame = math.floor(thrustCurrentTic / 5) + 1
-    for shipIndex, ship in ipairs(objects.ships) do
-        local thrustX = ship.body:getX() - ship.shape:getRadius() * math.cos(ship.body:getAngle()) 
+    for shipId, ship in pairs(objects.ships) do
+        local thrustX = ship.body:getX() - ship.shape:getRadius() * math.cos(ship.body:getAngle())
         local thrustY = ship.body:getY() - ship.shape:getRadius() * math.sin(ship.body:getAngle())
-    
+
         if ship.speed > 0 and not(ship.dead) then
             local thrustScale = ship.speed / maxSpeed * 3
             love.graphics.draw(thrustAnim[thrustCurrentFrame], thrustX, thrustY, ship.body:getAngle() + math.pi / 2, thrustScale, thrustScale, thrustWidth / 2, thrustHeight / 2)
@@ -325,20 +325,20 @@ function drawWorld()
             drawInWorld(ship.deathPsystem, ship.body:getX(), ship.body:getY())
         end
     end
-    
+
     -- Game over text if a ship is dead
     local numAliveShips = 0
-    local aliveShipIndex = -1
-    for shipIndex, ship in ipairs(objects.ships) do
-        if not(ship.dead) then 
+    local aliveShipId = nil
+    for shipId, ship in pairs(objects.ships) do
+        if not(ship.dead) then
             numAliveShips = numAliveShips + 1
-            aliveShipIndex = shipIndex
+            aliveShipId = shipId
         end
     end
 
     local winMessage
     if numAliveShips == 1 then
-        winMessage = 'Player '..aliveShipIndex..' wins!'
+        winMessage = 'Player '..aliveShipId..' wins!'
     elseif numAliveShips == 0 then
         winMessage = 'Nobody wins!'
     end
@@ -347,7 +347,7 @@ function drawWorld()
         local prevFont = love.graphics.getFont()
         local winFont = love.graphics.newFont(50)
         love.graphics.setFont(winFont)
-        love.graphics.print(winMessage, arenaWidth / 2 - winFont:getWidth(winMessage) / 2, 
+        love.graphics.print(winMessage, arenaWidth / 2 - winFont:getWidth(winMessage) / 2,
                                         arenaHeight / 2 - winFont:getHeight() / 2)
         love.graphics.setFont(prevFont)
     end
@@ -358,11 +358,11 @@ function love.draw()
     -- Debug
     love.graphics.setColor(1, 1, 1)
     love.graphics.print(table.concat({
-        'shipAngle: '..objects.ships[1].body:getAngle(),
-        'shipX: '..objects.ships[1].body:getX(),
-        'shipY: '..objects.ships[1].body:getY(),
-        'reloadDelay: '..objects.ships[1].reload_delay,
-        'shipSpeed: '..objects.ships[1].speed,
+        'shipAngle: '..objects.myShip.body:getAngle(),
+        'shipX: '..objects.myShip.body:getX(),
+        'shipY: '..objects.myShip.body:getY(),
+        'reloadDelay: '..objects.myShip.reload_delay,
+        'shipSpeed: '..objects.myShip.speed,
         'collision: '..collisionText
     }, '\n'))
 
