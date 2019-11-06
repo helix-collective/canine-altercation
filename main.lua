@@ -1,6 +1,7 @@
 socket = require('socket')
 uuid = require('./util/uuid')
 uuid.randomseed(socket.gettime()*10000)
+json = require('./util/json')
 
 require "camera"
 
@@ -30,6 +31,11 @@ function love.load()
 
   -- Game State
   resetGameState()
+
+  -- Networking
+  enet = require("enet")
+  host = enet.host_create()
+  server = host:connect("localhost:12345")
 end
 
 function newShip(ship_sprite, id)
@@ -243,6 +249,91 @@ function love.update(dt)
                                     math.sin(ship.body:getAngle()) * ship.speed)
         updateWorldObject(ship)
     end
+
+    networkSendTic()
+end
+
+function shipToJson(state, ship)
+    local obj = {}
+    obj.dead = not(not(ship.dead))
+    if not(ship.dead) then
+        obj.pos = {}
+        obj.pos.x = ship.body:getX()
+        obj.pos.y = ship.body:getY()
+        obj.angle = ship.body:getAngle()
+        obj.speed = ship.shipSpeed
+    end
+    state.ships[ship.id] = obj
+end
+
+function jsonToShips(state)
+    local myShipId = objects.myShip.id
+    
+    for id,obj in pairs(state.ships) do
+        if (id ~= myShipId) then
+            -- test if its in objects already
+            local otherShip = objects.ships[id]
+            if otherShip == nil then
+                -- if not create it
+                otherShip = newShip("/assets/PNG/Sprites/Ships/spaceShips_004.png", id)
+                objects.ships[id] = otherShip
+            end
+
+            -- update
+            otherShip.body:setX(obj.pos.x)
+            otherShip.body:setY(obj.pos.y)
+            otherShip.body:setAngle(obj.angle)
+            otherShip.shipSpeed = obj.speed
+        end
+    end
+
+end
+
+
+function bulletToJson(state, bullet)
+    local obj = {}
+    obj.dead = not(not(bullet.dead))
+    if (not bullet.dead) then
+        obj.pos = {}
+        obj.vel = {}
+        obj.pos.x = bullet.body:getX()
+        obj.pos.y = bullet.body:getY()
+        obj.vel.x, obj.vel.y = bullet.body:getLinearVelocity()
+    end
+    state.bullets[bullet.id] = obj
+end
+
+function networkSendTic()
+    local event = host:service(0)
+
+    local state = {}
+    state.ships = {}
+    state.bullets = {}
+
+    shipToJson(state, objects.myShip)
+
+
+    -- todo: deal with bullet dead -> no bullet in object state!
+    --for bulletIndex, bullet in ipairs(objects.bullets) do
+    --    bulletToJson(state, bullet)
+    --end
+
+    local stateJsonStr = json.encode(state)
+    
+    --local msg = string.format("%s %s $", objects.localShips[1].body:getX(), objects.localShips[1].body:getY())
+    --udp:send(msg)
+    if(event) then
+      event.peer:send(stateJsonStr)
+
+      if event.type == "connect" then
+        print("Connected to", event.peer)  
+      elseif event.type == "receive" then
+        print("rx...", event.data)   
+        stateIn = json.decode(event.data)
+
+        jsonToShips(stateIn)
+      end
+    end
 end
 
 function love.keypressed(key)
@@ -255,6 +346,7 @@ function love.keypressed(key)
         newBullet.body:setLinearVelocity(math.cos(objects.myShip.body:getAngle()) * bulletSpeed,
                                          math.sin(objects.myShip.body:getAngle()) * bulletSpeed)
         newBullet.body:setAngle(objects.myShip.body:getAngle())
+        newBullet.id = uuid()
         newBullet.id = uuid()
         newBullet.shape = love.physics.newCircleShape(5)
         newBullet.sprite = love.graphics.newImage("/assets/PNG/Sprites/Missiles/spaceMissiles_001.png")
