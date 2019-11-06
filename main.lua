@@ -103,6 +103,7 @@ function newAsteroid()
     asteroid.type = "asteroid"
     asteroid.body = love.physics.newBody(world, love.math.random(0, arenaWidth), love.math.random(0, arenaHeight), "static")
     asteroid.sprite = love.graphics.newImage('assets/PNG/Sprites/Meteors/spaceMeteors_001.png')
+    asteroid.size = love.math.randomNormal(0.15, 0.5)
     return asteroid
 end
 
@@ -422,7 +423,7 @@ end
 
 function drawAsteroids()
     for asteroidIndex, asteroid in ipairs(objects.asteroids) do
-        drawInWorld(asteroid.sprite, asteroid.body:getX(), asteroid.body:getY(), 0, 0.75, 0.75, asteroid.sprite:getWidth()/2, asteroid.sprite:getHeight()/2)
+        drawInWorld(asteroid.sprite, asteroid.body:getX(), asteroid.body:getY(), 0, asteroid.size, asteroid.size, asteroid.sprite:getWidth()/2, asteroid.sprite:getHeight()/2)
     end
 end
 
@@ -495,7 +496,7 @@ function love.draw()
     }, '\n'))
 
     camera:set()
-    love.graphics.draw(thisImage,thisQuad,0,0)
+    -- love.graphics.draw(thisImage,thisQuad,0,0)
     drawWorld()
     camera:unset()
 end
