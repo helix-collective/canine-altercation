@@ -36,7 +36,13 @@ function love.load()
   thisImage:setWrap('repeat','repeat')
 
     -- loading the sound effect files
-    bulletSound = love.audio.newSource("assets/sound/spacepew1.mp3", "static")
+    bulletSounds = {
+        love.audio.newSource("assets/sound/spacepew1.mp3", "static"),
+        love.audio.newSource("assets/sound/spacepew2.mp3", "static"),
+        love.audio.newSource("assets/sound/spacepew3.mp3", "static"),
+        love.audio.newSource("assets/sound/spacepew4.mp3", "static"),
+        love.audio.newSource("assets/sound/spacepew5.mp3", "static")
+    }
     shipZoomSound = love.audio.newSource("assets/sound/zoom.mp3", "static")
     shipZoomSound:setVolume(0.5)
     shipBreakSound = love.audio.newSource("assets/sound/spacebreaks.mp3", "static")
@@ -411,7 +417,8 @@ function love.keypressed(key)
         )
 
         objects.bullets[newBullet.id] = newBullet
-        bulletSound:play()
+        local randSoundIndex = math.floor(love.math.random(1,5))
+        bulletSounds[randSoundIndex]:play()
         objects.myShip.reload_delay = RELOAD_DELAY
     end
 
