@@ -250,7 +250,9 @@ function love.keypressed(key)
                                 "dynamic")
         newBullet.body:setLinearVelocity(math.cos(objects.myShip.body:getAngle()) * bulletSpeed, 
                                          math.sin(objects.myShip.body:getAngle()) * bulletSpeed)
+        newBullet.body:setAngle(objects.myShip.body:getAngle())
         newBullet.shape = love.physics.newCircleShape(5)
+        newBullet.sprite = love.graphics.newImage("/assets/PNG/Sprites/Missiles/spaceMissiles_001.png")
         newBullet.fixture = love.physics.newFixture(newBullet.body, newBullet.shape, 1)
         newBullet.fixture:setRestitution(0.1)
         newBullet.fixture:setCategory(CATEGORY_BULLET, objects.myShip.fixture:getCategory())
@@ -288,13 +290,8 @@ end
 
 function drawBullets()
     -- Once a bullet is an image, we can use the "drawInWorld" function
-    for i=-1,1 do
-        for j=-1,1 do
-            for bulletIndex, bullet in ipairs(objects.bullets) do
-                love.graphics.setColor(0, 1, 0)
-                love.graphics.circle('fill', bullet.body:getX() + i * arenaWidth, bullet.body:getY() + j * arenaHeight, 5)
-            end
-        end
+    for bulletIndex, bullet in ipairs(objects.bullets) do
+        drawInWorld(bullet.sprite, bullet.body:getX(), bullet.body:getY(), bullet.body:getAngle() + math.pi/2, 0.75, 0.75, bullet.sprite:getWidth()/2, bullet.sprite:getHeight()/2)
     end
 end
 
