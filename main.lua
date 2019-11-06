@@ -16,7 +16,7 @@ function love.load()
   maxSpeed = 500
   bulletSpeed = 1000
   shipRadius = 30
-  scale = 5
+  scale = 1
 
   RELOAD_DELAY = 2 -- seconds
 
@@ -371,6 +371,10 @@ function love.keypressed(key)
 
     if key == 'r' then
       resetGameState()
+    end
+
+    if key == 'q' then
+        love.event.quit()
     end
 end
 
