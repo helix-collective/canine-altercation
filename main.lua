@@ -300,11 +300,11 @@ function shipToJson(state, ship)
     state.objs[ship.id] = obj
 end
 
-function jsonToShips(state)
+function jsonToGameObjects(state)
     local myShipId = objects.myShip.id
     
     for id,obj in pairs(state.objs) do
-        if (obj.type == 'ship' and id ~= myShipId) then
+        if (obj.type == 'ship' and not(obj.dead) and id ~= myShipId) then
             -- test if its in objects already
             local otherShip = objects.ships[id]
             if otherShip == nil then
@@ -318,6 +318,14 @@ function jsonToShips(state)
             otherShip.body:setY(obj.pos.y)
             otherShip.body:setAngle(obj.angle)
             otherShip.shipSpeed = obj.speed
+        end
+
+        if (obj.type == 'bullet' and not(obj.dead)) then
+            local bullet = objects.bullets[id]
+            if bullet == nil then
+                bullet = newBullet(obj.pos.x, obj.pos.y, obj.vel.x, obj.vel.y, obj.angle, id)
+                objects.bullets[id] = bullet
+            end
         end
     end
 
@@ -334,6 +342,7 @@ function bulletToJson(state, bullet)
         obj.pos.x = bullet.body:getX()
         obj.pos.y = bullet.body:getY()
         obj.vel.x, obj.vel.y = bullet.body:getLinearVelocity()
+        obj.angle = bullet.body:getAngle()
     end
     state.objs[bullet.id] = obj
 end
@@ -363,7 +372,7 @@ function networkSendTic()
         print("rx...", event.data)   
         stateIn = json.decode(event.data)
 
-        jsonToShips(stateIn)
+        jsonToGameObjects(stateIn)
       end
     end
 end
