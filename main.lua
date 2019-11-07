@@ -146,9 +146,9 @@ function newAsteroid()
     asteroid.type = "asteroid"
     asteroid.body = love.physics.newBody(world, love.math.random(0, arenaWidth), love.math.random(0, arenaHeight), "dynamic")
     asteroid.sprite = randAsteroidSprite()
-    asteroid.size = love.math.randomNormal(0.15, 0.5)
     -- asteroid.parallax = love.math.randomNormal(0.1, 0.5)
-    asteroid.parallax = math.floor(love.math.random(1, 2)) / 4
+    asteroid.parallax = love.math.random(2, 6)
+    asteroid.size = 1 / (asteroid.parallax)
     asteroid.baseSpeedX = love.math.random(-ASTEROID_SPEED, ASTEROID_SPEED)
     asteroid.baseSpeedY = love.math.random(-ASTEROID_SPEED, ASTEROID_SPEED)
     asteroid.body:setLinearVelocity(asteroid.baseSpeedX, asteroid.baseSpeedY)
@@ -195,6 +195,7 @@ function resetGameState()
         local asteroid = newAsteroid()
         table.insert(objects.asteroids, asteroid)
     end
+    table.sort(objects.asteroids, compareByParallax)
 
     objects.bullets = {} -- list of bullets
 end
@@ -349,8 +350,8 @@ function love.update(dt)
 
     for asteroidIndex, asteroid in ipairs(objects.asteroids) do
         local vx, vy = objects.myShip.body:getLinearVelocity()
-        local asteroidSpeedX = asteroid.parallax * (asteroid.baseSpeedX + math.cos(objects.myShip.body:getAngle()) * vx)
-        local asteroidSpeedY = asteroid.parallax * (asteroid.baseSpeedY + math.sin(objects.myShip.body:getAngle()) * vy)
+        local asteroidSpeedX = ((asteroid.baseSpeedX - vx) / asteroid.parallax) + vx
+        local asteroidSpeedY = ((asteroid.baseSpeedY - vy) / asteroid.parallax) + vy
         asteroid.body:setLinearVelocity(asteroidSpeedX, asteroidSpeedY)
         updateWorldObject(asteroid)
     end
@@ -525,6 +526,10 @@ function drawBullets()
             drawInWorld(bullet.sprite, bullet.body:getX(), bullet.body:getY(), bullet.body:getAngle() + math.pi/2, 0.75, 0.75, bullet.sprite:getWidth()/2, bullet.sprite:getHeight()/2)
         end
     end
+end
+
+function compareByParallax(a, b)
+    return a.parallax > b.parallax
 end
 
 function drawAsteroids()
