@@ -74,7 +74,12 @@ function newShip(ship_sprite, id)
     ship.type = 'ship'
     ship.lifeStatus = lifeStatus.alive
     -- place the body somewhere in the arena
-    ship.body = love.physics.newBody(world, love.math.random(math.floor(shipRadius), math.floor(arenaWidth - shipRadius)), love.math.random(math.floor(shipRadius), math.floor(arenaHeight - shipRadius)), "dynamic")
+    -- local spawnXRange = love.math.random(math.floor(shipRadius), math.floor(arenaWidth - shipRadius))
+    -- local spawnYRange = love.math.random(math.floor(shipRadius), math.floor(arenaHeight - shipRadius))
+    -- place the body somewhere really close to the center for debugging
+    local spawnXRange = love.math.random(math.floor(arenaWidth / 4), math.floor(arenaWidth * 3 / 4))
+    local spawnYRange = love.math.random(math.floor(arenaWidth / 4), math.floor(arenaHeight * 3 / 4))
+    ship.body = love.physics.newBody(world, spawnXRange, spawnYRange, "dynamic")
     ship.body:setAngularDamping(1000)  --for colissions
     ship.shape = love.physics.newCircleShape(shipRadius)
     ship.fixture = love.physics.newFixture(ship.body, ship.shape, 1) -- Attach fixture to body and give it a density of 1.
