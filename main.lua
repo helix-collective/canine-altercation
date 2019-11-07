@@ -29,7 +29,7 @@ function love.load()
 
   CATEGORY_BULLET = 9
   SHIP_CATEGORY = 10
-  ASTEROIDS = 10
+  ASTEROIDS = 40
   ASTEROID_SPEED = 20
 
   DEADOBJ_SYNC_TIME = 5
@@ -147,8 +147,11 @@ function newAsteroid()
     asteroid.body = love.physics.newBody(world, love.math.random(0, arenaWidth), love.math.random(0, arenaHeight), "dynamic")
     asteroid.sprite = randAsteroidSprite()
     asteroid.size = love.math.randomNormal(0.15, 0.5)
-    asteroid.body:setLinearVelocity(love.math.random(-ASTEROID_SPEED, ASTEROID_SPEED),
-                                    love.math.random(-ASTEROID_SPEED, ASTEROID_SPEED))
+    -- asteroid.parallax = love.math.randomNormal(0.1, 0.5)
+    asteroid.parallax = math.floor(love.math.random(1, 2)) / 4
+    asteroid.baseSpeedX = love.math.random(-ASTEROID_SPEED, ASTEROID_SPEED)
+    asteroid.baseSpeedY = love.math.random(-ASTEROID_SPEED, ASTEROID_SPEED)
+    asteroid.body:setLinearVelocity(asteroid.baseSpeedX, asteroid.baseSpeedY)
     return asteroid
 end
 
@@ -344,7 +347,11 @@ function love.update(dt)
         updateWorldObject(ship)
     end
 
-    for asteroidIndex, asteroid in ipairs(objects.ships) do
+    for asteroidIndex, asteroid in ipairs(objects.asteroids) do
+        local vx, vy = objects.myShip.body:getLinearVelocity()
+        local asteroidSpeedX = asteroid.parallax * (asteroid.baseSpeedX + math.cos(objects.myShip.body:getAngle()) * vx)
+        local asteroidSpeedY = asteroid.parallax * (asteroid.baseSpeedY + math.sin(objects.myShip.body:getAngle()) * vy)
+        asteroid.body:setLinearVelocity(asteroidSpeedX, asteroidSpeedY)
         updateWorldObject(asteroid)
     end
 
