@@ -92,7 +92,7 @@ function newShip(ship_sprite, id)
     -- Ship death explosion
     local img = love.graphics.newImage('t1.png')
     ship.deathPsystem = love.graphics.newParticleSystem(img, 200)
-    ship.deathPsystem:setParticleLifetime(1, 10)
+    ship.deathPsystem:setParticleLifetime(1, 3)
     ship.deathPsystem:setEmissionRate(0)
     ship.deathPsystem:setSizeVariation(1)
     ship.deathPsystem:setSizes(0.1, 0.07, 0.05)
