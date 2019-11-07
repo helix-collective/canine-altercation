@@ -15,6 +15,7 @@ function love.load()
   arenaHeight = love.graphics.getHeight() * 2
   maxSpeed = 500
   bulletSpeed = 1000
+  bulletLifeSecs = 5
 
   -- ship & bullet radius tuned so that ship radius is inside the graphics size
   -- bullet radius is about the size to fit in the area between ship circle and graphical shape of ship
@@ -30,6 +31,15 @@ function love.load()
   SHIP_CATEGORY = 10
   ASTEROIDS = 10
   ASTEROID_SPEED = 20
+
+  DEADOBJ_SYNC_TIME = 5
+
+  -- its an enum
+  lifeStatus = {}
+  lifeStatus.alive = 0
+  lifeStatus.dead = 1
+  lifeStatus.remembered = 2
+  lifeStatus.forgotten = 3
 
   thisQuad = love.graphics.newQuad(0,0,arenaWidth,arenaHeight,32,32)
   thisImage = love.graphics.newImage('assets/PNG/Sprites/Effects/spaceEffects_001.png')
@@ -62,6 +72,7 @@ function newShip(ship_sprite, id)
     local ship = {}
     ship.id = id
     ship.type = 'ship'
+    ship.lifeStatus = lifeStatus.alive
     -- place the body somewhere in the arena
     ship.body = love.physics.newBody(world, love.math.random(math.floor(shipRadius), math.floor(arenaWidth - shipRadius)), love.math.random(math.floor(shipRadius), math.floor(arenaHeight - shipRadius)), "dynamic")
     ship.body:setAngularDamping(1000)  --for colissions
@@ -210,16 +221,16 @@ function beginContact(a, b, coll)
     -- Seems like you can't update objects in callbacks (results in error)
     -- so just mark it and process next tic
     if (not (colWall == nil) and not (colBullet == nil)) then
-        colBullet.dead = true -- remove a bullet when it hits the wall in the next tic
+        colBullet.lifeStatus = lifeStatus.dead -- remove a bullet when it hits the wall in the next tic
     elseif (not (colShip == nil) and not (colBullet == nil)) then
         -- If the ship isn't already dead, kick of the death animation
-        if not (colShip.dead) then
+        if colShip.lifeStatus == lifeStatus.alive then
             colShip.deathPsystem:reset()
             colShip.deathPsystem:emit(1000)
         end
 
-        colBullet.dead = true
-        colShip.dead = true
+        colBullet.lifeStatus = lifeStatus.dead
+        colShip.lifeStatus = lifeStatus.dead
     end
 end
 
@@ -247,23 +258,47 @@ function updateWorldObject(object)
 end
 
 function love.update(dt)
+    local tNow = os.time()
+    
+    -- propagate physics engine positions (& any resulting collision callbacks)
     world:update(dt)
+    
+    for bulletId, bullet in pairs(objects.bullets) do
+        if (bullet.lifeStatus == lifeStatus.alive) then
+            if (bullet.deadAt < tNow) then
+                bullet.lifeStatus = lifeStatus.dead
+                print(tNow, ' bullet dead')
+            end
+        end
+
+        if (bullet.lifeStatus == lifeStatus.alive) then
+            updateWorldObject(bullet)
+        end
+    end
+
     camera:setPosition(objects.myShip.body:getX() - (scale * love.graphics.getWidth() / 2), objects.myShip.body:getY() - (scale * love.graphics.getHeight() / 2))
 
-    -- remove all dead bullets
-    local deadBulletIds = {}
+    local forgetBulletIds = {}
     for bulletId, bullet in pairs(objects.bullets) do
-        if (not bullet.dead) then
-            updateWorldObject(bullet)
-            if (bullet.dead) then
-                bullet.body:destroy()
-                table.insert(deadBulletIds, bulletId)
+        if (bullet.lifeStatus == lifeStatus.dead) then
+            -- when you die - the body is destroyed but the identity is remembered
+            bullet.body:destroy()
+            bullet.lifeStatus = lifeStatus.remembered  -- a memorial will be performed later
+            bullet.forgetAt = tNow + DEADOBJ_SYNC_TIME
+        end
+
+        if (bullet.lifeStatus == lifeStatus.remembered) then
+            if (bullet.forgetAt < tNow) then
+                table.insert(forgetBulletIds, bulletId)
             end
         end
     end
 
-    for i, deadBulletId in pairs(deadBulletIds) do
-      objects.bullets[deadBulletId] = nil
+    for i, id in pairs(forgetBulletIds) do
+      print(tNow, ' bullet forget')
+      -- memorial for dead but remembered bullets
+      objects.bullets[id] = nil
+      -- now forgotten permenantly
     end
 
     -- update ship angle
@@ -286,7 +321,7 @@ function love.update(dt)
     objects.myShip.reload_delay = objects.myShip.reload_delay - dt
 
     for shipId, ship in pairs(objects.ships) do
-        if ship.dead then
+        if ship.lifeStatus == lifeStatus.dead then
           -- Do the death animation
           ship.deathPsystem:update(dt)
 
@@ -313,9 +348,9 @@ end
 
 function shipToJson(state, ship)
     local obj = {}
-    obj.dead = not(not(ship.dead))
+    obj.lifeStatus = ship.lifeStatus
     obj.type = 'ship'
-    if not(ship.dead) then
+    if ship.lifeStatus == lifeStatus.alive then
         obj.type = 'ship'
         obj.pos = {}
         obj.pos.x = ship.body:getX()
@@ -330,7 +365,7 @@ function jsonToGameObjects(state)
     local myShipId = objects.myShip.id
 
     for id,obj in pairs(state.objs) do
-        if (obj.type == 'ship' and not(obj.dead) and id ~= myShipId) then
+        if (obj.type == 'ship' and (obj.lifeStatus == lifeStatus.alive) and id ~= myShipId) then
             -- test if its in objects already
             local otherShip = objects.ships[id]
             if otherShip == nil then
@@ -346,7 +381,7 @@ function jsonToGameObjects(state)
             otherShip.shipSpeed = obj.speed
         end
 
-        if (obj.type == 'bullet' and not(obj.dead)) then
+        if (obj.type == 'bullet' and obj.lifeStatus == lifeStatus.alive) then
             local bullet = objects.bullets[id]
             if bullet == nil then
                 bullet = newBullet(obj.pos.x, obj.pos.y, obj.vel.x, obj.vel.y, obj.angle, id)
@@ -360,9 +395,11 @@ end
 
 function bulletToJson(state, bullet)
     local obj = {}
-    obj.dead = not(not(bullet.dead))
     obj.type = 'bullet'
-    if (not bullet.dead) then
+    obj.lifeStatus = bullet.lifeStatus
+    obj.deadAt = bullet.deadAt
+    obj.forgetAt = bullet.forgetAt
+    if (bullet.lifeStatus == lifeStatus.alive) then
         obj.pos = {}
         obj.vel = {}
         obj.pos.x = bullet.body:getX()
@@ -403,7 +440,7 @@ function networkSendTic()
     end
 end
 
-function newBullet(x, y, vx, vy, angle, id)
+function newBullet(x, y, vx, vy, angle, id, deadAt)
     local newBullet = {}
     newBullet.body = love.physics.newBody(world, x, y, "dynamic")
     newBullet.body:setLinearVelocity(vx, vy)
@@ -417,18 +454,22 @@ function newBullet(x, y, vx, vy, angle, id)
     newBullet.fixture:setMask(CATEGORY_BULLET)
     newBullet.fixture:setUserData(newBullet)
     newBullet.type = 'bullet'
+    newBullet.deadAt = deadAt
+    newBullet.lifeStatus = lifeStatus.alive
     return newBullet
 end
 
 function love.keypressed(key)
-    if objects.myShip.reload_delay < 0 and not(objects.myShip.dead) and key == "space" then
+    local tNow = os.time()
+    if objects.myShip.reload_delay < 0 and (objects.myShip.lifeStatus == lifeStatus.alive) and key == "space" then
         local newBullet = newBullet(
             objects.myShip.body:getX() + math.cos(objects.myShip.body:getAngle()) * (shipRadius + bulletRadius + epsRadius),
             objects.myShip.body:getY() + math.sin(objects.myShip.body:getAngle()) * (shipRadius + bulletRadius + epsRadius),
             math.cos(objects.myShip.body:getAngle()) * bulletSpeed,
             math.sin(objects.myShip.body:getAngle()) * bulletSpeed,
             objects.myShip.body:getAngle(),
-            uuid()
+            uuid(),
+            tNow + bulletLifeSecs
         )
 
         objects.bullets[newBullet.id] = newBullet
@@ -457,7 +498,7 @@ end
 
 function drawShips()
     for shipId, ship in pairs(objects.ships) do
-        if not(ship.dead) then
+        if ship.lifeStatus == lifeStatus.alive then
             love.graphics.setShader(ship.shader)
             drawInWorld(ship.sprite, ship.body:getX(), ship.body:getY(), ship.body:getAngle() - math.pi/2, 0.75, 0.75, ship.sprite:getWidth()/2, ship.sprite:getHeight()/2)
             love.graphics.setShader()
@@ -468,7 +509,7 @@ end
 function drawBullets()
     -- Once a bullet is an image, we can use the "drawInWorld" function
     for bulletId, bullet in pairs(objects.bullets) do
-        if(not bullet.dead) then
+        if (bullet.lifeStatus == lifeStatus.alive) then
             drawInWorld(bullet.sprite, bullet.body:getX(), bullet.body:getY(), bullet.body:getAngle() + math.pi/2, 0.75, 0.75, bullet.sprite:getWidth()/2, bullet.sprite:getHeight()/2)
         end
     end
@@ -497,13 +538,13 @@ function drawWorld()
         local thrustX = ship.body:getX() - ship.shape:getRadius() * math.cos(ship.body:getAngle())
         local thrustY = ship.body:getY() - ship.shape:getRadius() * math.sin(ship.body:getAngle())
 
-        if ship.speed > 0 and not(ship.dead) then
+        if ship.speed > 0 and ship.lifeStatus == lifeStatus.alive then
             local thrustScale = ship.speed / maxSpeed * 3
             love.graphics.draw(thrustAnim[thrustCurrentFrame], thrustX, thrustY, ship.body:getAngle() + math.pi / 2, thrustScale, thrustScale, thrustWidth / 2, thrustHeight / 2)
         end
 
         -- If ship is dead, spend a few tics drawing particles
-        if (ship.dead) then
+        if (ship.lifeStatus == lifeStatus.dead) then
             drawInWorld(ship.deathPsystem, ship.body:getX(), ship.body:getY())
         end
     end
@@ -512,7 +553,7 @@ function drawWorld()
     local numAliveShips = 0
     local aliveShipId = nil
     for shipId, ship in pairs(objects.ships) do
-        if not(ship.dead) then
+        if ship.lifeStatus == lifeStatus.alive then
             numAliveShips = numAliveShips + 1
             aliveShipId = shipId
         end
