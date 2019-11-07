@@ -384,7 +384,7 @@ function jsonToGameObjects(state)
         if (obj.type == 'bullet' and obj.lifeStatus == lifeStatus.alive) then
             local bullet = objects.bullets[id]
             if bullet == nil then
-                bullet = newBullet(obj.pos.x, obj.pos.y, obj.vel.x, obj.vel.y, obj.angle, id)
+                bullet = newBullet(obj.pos.x, obj.pos.y, obj.vel.x, obj.vel.y, obj.angle, id, obj.deadAt)
                 objects.bullets[id] = bullet
             end
         end
