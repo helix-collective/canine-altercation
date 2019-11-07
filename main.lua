@@ -269,6 +269,8 @@ end
 function love.update(dt)
     local tNow = os.time()
     
+    networkSendTic()
+
     -- propagate physics engine positions (& any resulting collision callbacks)
     world:update(dt)
     
@@ -356,7 +358,6 @@ function love.update(dt)
         updateWorldObject(asteroid)
     end
 
-    networkSendTic()
 end
 
 function shipToJson(state, ship)
