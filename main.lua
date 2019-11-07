@@ -429,7 +429,15 @@ function networkSendTic()
     local state = {}
     state.objs = {}
 
+    -- each client is responsible for sending state updates for itself
     shipToJson(state, objects.myShip)
+
+    -- also update states of other dead ships
+    for shipId, ship in pairs(objects.ships) do
+        if (ship.lifeStatus ~= lifeStatus.alive) then
+            shipToJson(state, ship)
+        end
+    end
 
     for bulletId, bullet in pairs(objects.bullets) do
         bulletToJson(state, bullet, tNow)
