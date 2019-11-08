@@ -2,6 +2,8 @@
 print("server starting")
 json = require('rxi-json-lua')
 
+DEFAULT_TIMEOUT_SECS = 10
+
 -- From https://leafo.net/lua-enet/#tutorial
 -- server.lua
 require "enet"
@@ -11,6 +13,7 @@ state = {}
 state.objs = {}
 
 while true do
+  local tNow = os.time()
   local event = host:service(100)
 
   if event and event.type == "receive" then
@@ -21,11 +24,18 @@ while true do
       state.objs[id] = val
     end
 
-    event.peer:send(json.encode(state))
-  end
+    for id,val in pairs(state.objs) do
+      if (val.forgetAt ~= nil) then
+        if (val.forgetAt < tNow) then
+          state.objs[id] = nil
+        end
+      else
+        val.forgetAt = tNow + DEFAULT_TIMEOUT_SECS
+      end
+    end
 
-  -- print("....", event)
-  
+    event.peer:send(json.encode(state))
+  end  
 end
 
 
