@@ -68,7 +68,7 @@ function love.load()
   -- Networking
   enet = require("enet")
   host = enet.host_create()
-  server = host:connect("192.168.3.52:12345")
+  server = host:connect("localhost:12345")
   camera:setScale(scale, scale)
 end
 
