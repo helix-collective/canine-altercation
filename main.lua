@@ -25,7 +25,7 @@ function love.load()
 
   scale = 1
 
-  RELOAD_DELAY = 1 -- seconds
+  RELOAD_DELAY = 1.5 -- seconds
 
   CATEGORY_BULLET = 9
   SHIP_CATEGORY = 10
