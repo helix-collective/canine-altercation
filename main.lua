@@ -23,7 +23,7 @@ function love.load()
   bulletRadius = 5
   epsRadius = 1e-3
 
-  scale = 1
+  scale = 1.5
 
   RELOAD_DELAY = 1.5 -- seconds
 
