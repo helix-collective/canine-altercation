@@ -164,6 +164,7 @@ end
 function resetGameState()
     -- Game State
     collisionText = ''
+    killCounter = 0
 
     -- Thruster
     thrustAnim = {}
@@ -247,6 +248,9 @@ function beginContact(a, b, coll)
 
         colBullet.lifeStatus = lifeStatus.dead
         colShip.lifeStatus = lifeStatus.dead
+        if (colBullet.ownerId and colBullet.ownerId == objects.myShip.id) then
+            killCounter = killCounter + 1
+        end
     end
 end
 
@@ -405,7 +409,7 @@ function jsonToGameObjects(state)
         if (obj.type == 'bullet' and obj.lifeStatus == lifeStatus.alive) then
             local bullet = objects.bullets[id]
             if bullet == nil then
-                bullet = newBullet(obj.pos.x, obj.pos.y, obj.vel.x, obj.vel.y, obj.angle, id, obj.deadAt)
+                bullet = newBullet(obj.pos.x, obj.pos.y, obj.vel.x, obj.vel.y, obj.angle, id, obj.deadAt, obj.ownerId)
                 objects.bullets[id] = bullet
             end
         end
@@ -427,6 +431,7 @@ function bulletToJson(state, bullet)
         obj.pos.y = bullet.body:getY()
         obj.vel.x, obj.vel.y = bullet.body:getLinearVelocity()
         obj.angle = bullet.body:getAngle()
+        obj.ownerId = bullet.ownerId
     end
     state.objs[bullet.id] = obj
 end
@@ -469,7 +474,7 @@ function networkSendTic()
     end
 end
 
-function newBullet(x, y, vx, vy, angle, id, deadAt)
+function newBullet(x, y, vx, vy, angle, id, deadAt, ownerId)
     local newBullet = {}
     newBullet.body = love.physics.newBody(world, x, y, "dynamic")
     newBullet.body:setLinearVelocity(vx, vy)
@@ -485,6 +490,7 @@ function newBullet(x, y, vx, vy, angle, id, deadAt)
     newBullet.type = 'bullet'
     newBullet.deadAt = deadAt
     newBullet.lifeStatus = lifeStatus.alive
+    newBullet.ownerId = ownerId
     return newBullet
 end
 
@@ -498,7 +504,8 @@ function love.keypressed(key)
             math.sin(objects.myShip.body:getAngle()) * bulletSpeed,
             objects.myShip.body:getAngle(),
             uuid(),
-            tNow + bulletLifeSecs
+            tNow + bulletLifeSecs,
+            objects.myShip.id
         )
 
         objects.bullets[newBullet.id] = newBullet
@@ -620,7 +627,8 @@ function love.draw()
         'shipY: '..objects.myShip.body:getY(),
         'reloadDelay: '..objects.myShip.reload_delay,
         'shipSpeed: '..objects.myShip.speed,
-        'collision: '..collisionText
+        'collision: '..collisionText,
+        'kill counter: '..killCounter
     }, '\n'))
 
     camera:set()
