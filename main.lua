@@ -14,7 +14,7 @@ function love.load()
   arenaWidth = love.graphics.getWidth() * 2
   arenaHeight = love.graphics.getHeight() * 2
   maxSpeed = 500
-  bulletSpeed = 650
+  bulletSpeed = 750
   bulletLifeSecs = 5
 
   -- ship & bullet radius tuned so that ship radius is inside the graphics size
