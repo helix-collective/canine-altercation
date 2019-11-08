@@ -510,7 +510,7 @@ function love.keypressed(key)
 
         objects.bullets[newBullet.id] = newBullet
         local randSoundIndex = math.floor(love.math.random(1,5))
-        bulletSounds[randSoundIndex]:setVolume(0.5)
+        bulletSounds[randSoundIndex]:setVolume(0.2)
         bulletSounds[randSoundIndex]:play()
         objects.myShip.reload_delay = RELOAD_DELAY
     end
