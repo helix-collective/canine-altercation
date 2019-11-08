@@ -244,13 +244,13 @@ function beginContact(a, b, coll)
             shipExplodeSound:play()
             colShip.deathPsystem:reset()
             colShip.deathPsystem:emit(1000)
+            if (colBullet.ownerId and colBullet.ownerId == objects.myShip.id) then
+                killCounter = killCounter + 1
+            end
         end
 
         colBullet.lifeStatus = lifeStatus.dead
         colShip.lifeStatus = lifeStatus.dead
-        if (colBullet.ownerId and colBullet.ownerId == objects.myShip.id) then
-            killCounter = killCounter + 1
-        end
     end
 end
 
