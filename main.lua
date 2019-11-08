@@ -53,10 +53,19 @@ function love.load()
         love.audio.newSource("assets/sound/spacepew4.mp3", "static"),
         love.audio.newSource("assets/sound/spacepew5.mp3", "static")
     }
+    bulletSounds[5]:setVolume(0.7)
+    bulletSounds[1]:setVolume(0.7)
+    bulletSounds[3]:setVolume(0.7)
+    bulletSounds[4]:setVolume(0.7)
     shipZoomSound = love.audio.newSource("assets/sound/zoom.mp3", "static")
     shipZoomSound:setVolume(0.5)
     shipBreakSound = love.audio.newSource("assets/sound/spacebreaks.mp3", "static")
     shipExplodeSound = love.audio.newSource("assets/sound/explode.mp3", "static")
+    k9theme = love.audio.newSource("assets/sound/k9.mp3", "static")
+    k9theme:setLooping( true ) --so it doesnt stop
+    k9theme:setVolume(0.3)
+    k9theme:play()
+
   -- Game State
   resetGameState()
 
