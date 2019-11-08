@@ -56,6 +56,7 @@ function love.load()
     shipZoomSound = love.audio.newSource("assets/sound/zoom.mp3", "static")
     shipZoomSound:setVolume(0.5)
     shipBreakSound = love.audio.newSource("assets/sound/spacebreaks.mp3", "static")
+    shipExplodeSound = love.audio.newSource("assets/sound/explode.mp3", "static")
   -- Game State
   resetGameState()
 
@@ -234,6 +235,7 @@ function beginContact(a, b, coll)
     elseif (not (colShip == nil) and not (colBullet == nil)) then
         -- If the ship isn't already dead, kick of the death animation
         if colShip.lifeStatus == lifeStatus.alive then
+            shipExplodeSound:play()
             colShip.deathPsystem:reset()
             colShip.deathPsystem:emit(1000)
         end
